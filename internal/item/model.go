@@ -20,6 +20,7 @@ type Item struct {
 	OldPrice     *float64  `json:"old_price"`
 	ThumbnailURL string    `json:"thumbnail_url"`
 	Status       string    `json:"status"`
+	Slip         string    `json:"slip"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

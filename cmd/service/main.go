@@ -8,6 +8,7 @@ import (
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_warmup_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/categories_tree"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
@@ -38,7 +39,8 @@ func main() {
 	mux.Route("/api/v1", func(r1 chi.Router) {
 		r1.Route("/admin", func(r2 chi.Router) {
 			r2.Post("/admin_warmup_items", admin_warmup_items.NewHandler(itemCache).Handle())
-			r2.Post("/create_item", admin_create_item.NewHandler().Handle())
+			r2.Post("/create_item", admin_create_item.NewHandler(itemRepo).Handle())
 		})
+		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())
 	})
 }
