@@ -1,0 +1,32 @@
+version: '2.4'
+
+networks:
+  service-steam-invoice:
+    driver: bridge
+    name: service-godzilla-soft-site
+
+services:
+  postgres:
+    image: postgres:15
+    networks:
+      - service-godzilla-soft-site
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+    env_file: ./.env.prod
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ['CMD-SHELL', 'psql -d service-godzilla-soft-site -U postgres -c "select 1"']
+      interval: 5s
+      retries: 10
+  psql_migrate:
+    image: migrate/migrate
+    networks:
+      - service-godzilla-soft-site
+    depends_on:
+      postgres:
+        condition: service_healthy 
+    volumes:
+      - ./db/changelog:/db/changelog
+    env_file: ./.env.prod
+    command: ["-path", "/db/changelog", "-database",  "postgres://postgres:$POSTGRES_PASSWORD@postgres:5432/service-godzilla-soft-site?sslmode=disable", "up"]
