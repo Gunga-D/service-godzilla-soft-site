@@ -3,8 +3,9 @@ package item
 import "time"
 
 const (
-	ActiveStatus = "active"
-	PausedStatus = "paused"
+	ActiveStatus   = "active"
+	PausedStatus   = "paused"
+	ArchivedStatus = "archived"
 )
 
 type Item struct {

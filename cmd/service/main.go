@@ -7,9 +7,12 @@ import (
 	"syscall"
 	"time"
 
+	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_warmup_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/cart_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/categories_tree"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/item_details"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/mdw"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
@@ -34,6 +37,8 @@ func main() {
 
 	userRepo := user_postgres.NewRepo(postgres)
 
+	codeRepo := code_postgres.NewRepo(postgres)
+
 	userPwdGenerator := user_password.NewGenerator()
 
 	mux := chi.NewMux()
@@ -57,9 +62,11 @@ func main() {
 
 		r1.Post("/user_register", user_register.NewHandler(os.Getenv("JWT_SECRET_KEY"), userRepo, userPwdGenerator).Handle())
 		r1.Post("/user_login", user_login.NewHandler(os.Getenv("JWT_SECRET_KEY"), userRepo, userPwdGenerator).Handle())
+		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
 
 		r1.Route("/", func(r2 chi.Router) {
 			r2.Use(mdw.NewJWT(os.Getenv("JWT_SECRET_KEY")).VerifyUser)
+			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache).Handle())
 		})
 	})
 }

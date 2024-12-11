@@ -53,6 +53,16 @@ func Return404(msg string, w http.ResponseWriter) {
 	})
 }
 
+func Return409(msg string, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusConflict)
+
+	json.NewEncoder(w).Encode(response{
+		Status:     "error",
+		ErrMessage: pointer.ToString(msg),
+	})
+}
+
 func Return500(msg string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
