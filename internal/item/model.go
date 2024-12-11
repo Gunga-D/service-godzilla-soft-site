@@ -8,19 +8,18 @@ const (
 )
 
 type Item struct {
-	ID           int64     `json:"id"`
-	SKU          string    `json:"sku"`
-	Title        string    `json:"title"`
-	Description  *string   `json:"description"`
-	CategoryID   int64     `json:"category_id"`
-	Platform     string    `json:"platform"`
-	Region       string    `json:"region"`
-	CurrentPrice float64   `json:"current_price"`
-	IsForSale    bool      `json:"is_for_sale"`
-	OldPrice     *float64  `json:"old_price"`
-	ThumbnailURL string    `json:"thumbnail_url"`
-	Status       string    `json:"status"`
-	Slip         string    `json:"slip"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID           int64     `db:"id"`
+	Title        string    `db:"title"`
+	Description  *string   `db:"description"`
+	CategoryID   int64     `db:"category_id"`
+	Platform     string    `db:"platform"`
+	Region       string    `db:"region"`
+	CurrentPrice float64   `db:"current_price"`
+	IsForSale    bool      `db:"is_for_sale"`
+	OldPrice     *float64  `db:"old_price"`
+	ThumbnailURL string    `db:"thumbnail_url"`
+	Status       string    `db:"status"`
+	Slip         string    `db:"slip"`
+	CreatedAt    time.Time `db:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at"`
 }

@@ -23,6 +23,26 @@ func ReturnOK(payload interface{}, w http.ResponseWriter) {
 	})
 }
 
+func Return400(msg string, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+
+	json.NewEncoder(w).Encode(response{
+		Status:     "error",
+		ErrMessage: pointer.ToString(msg),
+	})
+}
+
+func Return401(msg string, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+
+	json.NewEncoder(w).Encode(response{
+		Status:     "error",
+		ErrMessage: pointer.ToString(msg),
+	})
+}
+
 func Return404(msg string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)

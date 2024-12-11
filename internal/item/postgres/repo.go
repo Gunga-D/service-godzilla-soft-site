@@ -22,7 +22,6 @@ func NewRepo(db postgres.TxDatabase) *repo {
 func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 	q := sq.Insert("public.item").
 		Columns(
-			"sku",
 			"title",
 			"description",
 			"category_id",
@@ -36,7 +35,6 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 			"created_at",
 			"updated_at",
 		).Values(
-		i.SKU,
 		i.Title,
 		i.Description,
 		i.CategoryID,
@@ -69,7 +67,10 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 
 func (r *repo) FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64, cursor int64) ([]item.Item, error) {
 	query, args, err := sq.Select("*").From(`public.item`).
-		Where(sq.Gt{"id": cursor}).
+		Where(sq.And{
+			sq.Gt{"id": cursor},
+			sq.Eq{"status": item.ActiveStatus},
+		}).
 		OrderBy("id").
 		Limit(limit).
 		PlaceholderFormat(sq.Dollar).ToSql()
