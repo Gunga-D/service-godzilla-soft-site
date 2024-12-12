@@ -30,3 +30,14 @@ func (c *client) PublishDatabusItemOutOfStockDTO(ctx context.Context, msg ItemOu
 		Body:        raw,
 	})
 }
+
+func (c *client) PublishDatabusQuickUserRegistration(ctx context.Context, msg QuickUserRegistrationDTO) error {
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return c.amqp.PublishWithContext(ctx, "", "queue-quick-user-registration", true, false, sdk_amqp.Publishing{
+		ContentType: "application/json",
+		Body:        raw,
+	})
+}

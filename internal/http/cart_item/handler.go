@@ -54,10 +54,8 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		api.ReturnOK(CartItemResponsePayload{
-			Price:    item.CurrentPrice,
+			Price:    float64(item.CurrentPrice) / 100,
 			Currency: "RUB",
-			// TODO: Добавить paymentLink
-			PaymentLink: "",
 		}, w)
 	}
 }

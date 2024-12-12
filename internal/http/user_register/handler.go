@@ -3,11 +3,10 @@ package user_register
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 )
 
 var (
@@ -15,16 +14,14 @@ var (
 )
 
 type handler struct {
-	jwtSecretKey string
-	userRepo     user.Repository
-	pwdGenerator pwdGenerator
+	jwtService jwtService
+	userRepo   user.Repository
 }
 
-func NewHandler(jwtSecretKey string, userRepo user.Repository, pwdGenerator pwdGenerator) *handler {
+func NewHandler(jwtService jwtService, userRepo user.Repository) *handler {
 	return &handler{
-		jwtSecretKey: jwtSecretKey,
-		userRepo:     userRepo,
-		pwdGenerator: pwdGenerator,
+		jwtService: jwtService,
+		userRepo:   userRepo,
 	}
 }
 
@@ -38,7 +35,7 @@ func (h *handler) Handle() http.HandlerFunc {
 
 		userID, err := h.userRepo.CreateUser(r.Context(), user.User{
 			Email:    req.Email,
-			Password: h.pwdGenerator.GeneratePassword(r.Context(), req.Password),
+			Password: auth.GeneratePassword(r.Context(), req.Password),
 		})
 		if err != nil {
 			if errors.Is(err, errDuplicateKey) {
@@ -49,12 +46,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		payload := jwt.MapClaims{
-			"sub": userID,
-			"exp": time.Now().Add(time.Hour * 72).Unix(),
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-		accessToken, err := token.SignedString(h.jwtSecretKey)
+		accessToken, err := h.jwtService.GenerateToken(userID, req.Email)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
 			return

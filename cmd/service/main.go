@@ -13,13 +13,16 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_warmup_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/cart_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/categories_tree"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/create_order"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/item_details"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/mdw"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/payment_notification"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
-	user_password "github.com/Gunga-D/service-godzilla-soft-site/internal/user/password"
+	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
 	"github.com/go-chi/chi"
@@ -39,10 +42,11 @@ func main() {
 	itemCache := item_cache.NewCache(itemRepo)
 
 	userRepo := user_postgres.NewRepo(postgres)
+	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
 
 	codeRepo := code_postgres.NewRepo(postgres)
 
-	userPwdGenerator := user_password.NewGenerator()
+	orderRepo := order_postgres.NewRepo(postgres)
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -63,13 +67,16 @@ func main() {
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())
 
-		r1.Post("/user_register", user_register.NewHandler(os.Getenv("JWT_SECRET_KEY"), userRepo, userPwdGenerator).Handle())
-		r1.Post("/user_login", user_login.NewHandler(os.Getenv("JWT_SECRET_KEY"), userRepo, userPwdGenerator).Handle())
+		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
+		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
 		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
 
 		r1.Route("/", func(r2 chi.Router) {
-			r2.Use(mdw.NewJWT(os.Getenv("JWT_SECRET_KEY")).VerifyUser)
+			r2.Use(mdw.NewJWT(authJWT).VerifyUser)
 			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache, databusClient).Handle())
+			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, databusClient).Handle())
 		})
+
+		r1.Post("/payment_notification", payment_notification.NewHandler().Handle())
 	})
 }

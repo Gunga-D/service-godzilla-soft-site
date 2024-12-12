@@ -4,6 +4,8 @@ import "time"
 
 type MetaUserIDKey struct{}
 
+type MetaUserEmailKey struct{}
+
 type User struct {
 	ID        int64     `db:"id"`
 	Email     string    `db:"email"`

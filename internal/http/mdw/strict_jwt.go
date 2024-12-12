@@ -5,39 +5,40 @@ import (
 	"net/http"
 	"strings"
 
+	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 )
 
-type jwtMDW struct {
+type strictJwtMDW struct {
 	jwtService jwtService
 }
 
-func NewJWT(jwtService jwtService) *jwtMDW {
-	return &jwtMDW{
+func NewStrictJWT(jwtService jwtService) *strictJwtMDW {
+	return &strictJwtMDW{
 		jwtService: jwtService,
 	}
 }
 
-func (m *jwtMDW) VerifyUser(next http.Handler) http.Handler {
+func (m *strictJwtMDW) VerifyUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 		if header == "" {
-			next.ServeHTTP(w, r)
+			api.Return401("Авторизационный токен пустой", w)
 			return
 		}
 		headerParts := strings.Split(header, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			next.ServeHTTP(w, r)
+			api.Return401("Ошибка авторизации", w)
 			return
 		}
 		if len(headerParts[1]) == 0 {
-			next.ServeHTTP(w, r)
+			api.Return401("Ошибка авторизации", w)
 			return
 		}
 
 		userID, userEmail, err := m.jwtService.ParseToken(headerParts[1])
 		if err != nil {
-			next.ServeHTTP(w, r)
+			api.Return401("Ошибка авторизации", w)
 			return
 		}
 		ctxWithUserID := context.WithValue(r.Context(), user.MetaUserIDKey{}, userID)

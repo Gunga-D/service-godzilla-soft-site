@@ -9,15 +9,17 @@ const (
 )
 
 type Item struct {
-	ID           int64     `db:"id"`
-	Title        string    `db:"title"`
-	Description  *string   `db:"description"`
-	CategoryID   int64     `db:"category_id"`
-	Platform     string    `db:"platform"`
-	Region       string    `db:"region"`
-	CurrentPrice float64   `db:"current_price"`
+	ID          int64   `db:"id"`
+	Title       string  `db:"title"`
+	Description *string `db:"description"`
+	CategoryID  int64   `db:"category_id"`
+	Platform    string  `db:"platform"`
+	Region      string  `db:"region"`
+	// Указывается с копейками, таким образом:
+	// 100 рублей = 10000
+	CurrentPrice int64     `db:"current_price"`
 	IsForSale    bool      `db:"is_for_sale"`
-	OldPrice     *float64  `db:"old_price"`
+	OldPrice     *int64    `db:"old_price"`
 	ThumbnailURL string    `db:"thumbnail_url"`
 	Status       string    `db:"status"`
 	Slip         string    `db:"slip"`

@@ -1,7 +1,5 @@
 package user_register
 
-import "context"
-
-type pwdGenerator interface {
-	GeneratePassword(_ context.Context, pwd string) string
+type jwtService interface {
+	GenerateToken(userID int64, email string) (string, error)
 }

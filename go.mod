@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/AlekSi/pointer v1.2.0
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.5
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/jmoiron/sqlx v1.4.0

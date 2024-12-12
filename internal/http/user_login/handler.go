@@ -2,24 +2,21 @@ package user_login
 
 import (
 	"net/http"
-	"time"
 
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
-	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 )
 
 type handler struct {
-	jwtSecretKey string
-	userRepo     user.Repository
-	pwdValidator pwdValidator
+	jwtService jwtService
+	userRepo   user.Repository
 }
 
-func NewHandler(jwtSecretKey string, userRepo user.Repository, pwdValidator pwdValidator) *handler {
+func NewHandler(jwtService jwtService, userRepo user.Repository) *handler {
 	return &handler{
-		jwtSecretKey: jwtSecretKey,
-		userRepo:     userRepo,
-		pwdValidator: pwdValidator,
+		jwtService: jwtService,
+		userRepo:   userRepo,
 	}
 }
 
@@ -41,17 +38,12 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		if ok := h.pwdValidator.ValidatePassword(r.Context(), usr.Password, req.Password); !ok {
+		if ok := auth.ValidatePassword(r.Context(), usr.Password, req.Password); !ok {
 			api.Return400("Пароль или почта введены некорректно", w)
 			return
 		}
 
-		payload := jwt.MapClaims{
-			"sub": usr.ID,
-			"exp": time.Now().Add(time.Hour * 72).Unix(),
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-		accessToken, err := token.SignedString(h.jwtSecretKey)
+		accessToken, err := h.jwtService.GenerateToken(usr.ID, usr.Email)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
 			return

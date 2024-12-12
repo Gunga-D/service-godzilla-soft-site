@@ -3,6 +3,7 @@ package admin_create_item
 import (
 	"net/http"
 
+	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 )
@@ -24,6 +25,10 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return400("cannot parse request body", w)
 			return
 		}
+		var oldPrice *int64
+		if req.OldPrice != nil {
+			oldPrice = pointer.ToInt64(int64(*req.OldPrice * 100))
+		}
 
 		newItemID, err := h.itemsRepo.CreateItem(r.Context(), item.Item{
 			Title:        req.Title,
@@ -31,9 +36,9 @@ func (h *handler) Handle() http.HandlerFunc {
 			CategoryID:   req.CategoryID,
 			Platform:     req.Platform,
 			Region:       req.Region,
-			CurrentPrice: req.CurrentPrice,
+			CurrentPrice: int64(req.CurrentPrice * 100),
 			IsForSale:    req.IsForSale,
-			OldPrice:     req.OldPrice,
+			OldPrice:     oldPrice,
 			ThumbnailURL: req.ThumbnailURL,
 			Status:       item.ActiveStatus,
 			Slip:         req.Slip,

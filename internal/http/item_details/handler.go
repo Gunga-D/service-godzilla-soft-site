@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 )
 
@@ -33,6 +34,12 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return404("Такого товара нет в наличии", w)
 			return
 		}
+
+		var oldPrice *float64
+		if item.OldPrice != nil {
+			oldPrice = pointer.ToFloat64(float64(*item.OldPrice) / 100)
+		}
+
 		api.ReturnOK(ItemDTO{
 			ID:           item.ID,
 			Title:        item.Title,
@@ -40,9 +47,9 @@ func (h *handler) Handle() http.HandlerFunc {
 			CategoryID:   item.CategoryID,
 			Platform:     item.Platform,
 			Region:       item.Region,
-			CurrentPrice: item.CurrentPrice,
+			CurrentPrice: float64(item.CurrentPrice) / 100,
 			IsForSale:    item.IsForSale,
-			OldPrice:     item.OldPrice,
+			OldPrice:     oldPrice,
 			ThumbnailURL: item.ThumbnailURL,
 			Slip:         item.Slip,
 		}, w)
