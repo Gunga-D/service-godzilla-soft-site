@@ -8,6 +8,7 @@ import (
 	"time"
 
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_warmup_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/cart_item"
@@ -31,6 +32,8 @@ func main() {
 	defer cancel()
 
 	postgres := postgres.Get(ctx)
+
+	databusClient := databus.NewClient(ctx)
 
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemCache := item_cache.NewCache(itemRepo)
@@ -66,7 +69,7 @@ func main() {
 
 		r1.Route("/", func(r2 chi.Router) {
 			r2.Use(mdw.NewJWT(os.Getenv("JWT_SECRET_KEY")).VerifyUser)
-			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache).Handle())
+			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache, databusClient).Handle())
 		})
 	})
 }

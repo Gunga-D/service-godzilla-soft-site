@@ -65,6 +65,23 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 	return id, nil
 }
 
+func (r *repo) PauseItem(ctx context.Context, itemID int64) error {
+	query, args, err := sq.Update("public.item").
+		Where(sq.Eq{"id": itemID}).
+		Set("status", item.PausedStatus).
+		Set("updated_at", time.Now()).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	if _, err := r.db.ExecContext(ctx, query, args...); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *repo) FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64, cursor int64) ([]item.Item, error) {
 	query, args, err := sq.Select("*").From(`public.item`).
 		Where(sq.And{

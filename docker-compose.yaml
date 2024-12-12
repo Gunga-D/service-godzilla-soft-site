@@ -30,3 +30,14 @@ services:
       - ./db/changelog:/db/changelog
     env_file: ./.env.prod
     command: ["-path", "/db/changelog", "-database",  "postgres://postgres:$POSTGRES_PASSWORD@postgres:5432/service-godzilla-soft-site?sslmode=disable", "up"]
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    networks:
+      - service-godzilla-soft-site
+    restart: always
+    env_file: ./.env.prod
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672

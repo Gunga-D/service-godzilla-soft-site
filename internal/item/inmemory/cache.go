@@ -41,7 +41,7 @@ func (c *cache) StartSync(ctx context.Context) {
 	}
 	log.Printf("[info] sync items\n")
 
-	t := time.NewTicker(15 * time.Minute)
+	t := time.NewTicker(5 * time.Minute)
 	for {
 		select {
 		case <-ctx.Done():

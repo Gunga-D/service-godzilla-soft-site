@@ -3,18 +3,21 @@ package cart_item
 import (
 	"net/http"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 )
 
 type handler struct {
-	codeRepo   codeRepo
-	itemGetter itemGetter
+	codeRepo              codeRepo
+	itemGetter            itemGetter
+	itemOutOfStockDatabus itemOutOfStockDatabus
 }
 
-func NewHandler(codeRepo codeRepo, itemGetter itemGetter) *handler {
+func NewHandler(codeRepo codeRepo, itemGetter itemGetter, itemOutOfStockDatabus itemOutOfStockDatabus) *handler {
 	return &handler{
-		codeRepo:   codeRepo,
-		itemGetter: itemGetter,
+		codeRepo:              codeRepo,
+		itemGetter:            itemGetter,
+		itemOutOfStockDatabus: itemOutOfStockDatabus,
 	}
 }
 
@@ -42,6 +45,10 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 		if !hasCodes {
+			h.itemOutOfStockDatabus.PublishDatabusItemOutOfStockDTO(r.Context(), databus.ItemOutOfStockDTO{
+				ItemID: body.ItemID,
+			})
+
 			api.Return409("Данный товар уже закончился", w)
 			return
 		}
