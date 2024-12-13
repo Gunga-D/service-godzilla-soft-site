@@ -11,6 +11,7 @@ import (
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_load_codes"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_warmup_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/cart_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/categories_tree"
@@ -43,6 +44,7 @@ func main() {
 
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemCache := item_cache.NewCache(itemRepo)
+	go itemCache.StartSync(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres)
 	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
@@ -64,8 +66,10 @@ func main() {
 
 	mux.Route("/api/v1", func(r1 chi.Router) {
 		r1.Route("/admin", func(r2 chi.Router) {
-			r2.Post("/admin_warmup_items", admin_warmup_items.NewHandler(itemCache).Handle())
+			r2.Use(mdw.NewBearerMDW(os.Getenv("ADMIN_SECRET_KEY")).VerifyUser)
+			r2.Post("/warmup_items", admin_warmup_items.NewHandler(itemCache).Handle())
 			r2.Post("/create_item", admin_create_item.NewHandler(itemRepo).Handle())
+			r2.Post("/load_codes", admin_load_codes.NewHandler(codeRepo, itemRepo, databusClient).Handle())
 		})
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())

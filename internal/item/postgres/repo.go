@@ -32,6 +32,7 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 			"old_price",
 			"thumbnail_url",
 			"status",
+			"slip",
 			"created_at",
 			"updated_at",
 		).Values(
@@ -45,6 +46,7 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 		i.OldPrice,
 		i.ThumbnailURL,
 		i.Status,
+		i.Slip,
 		time.Now(),
 		time.Now(),
 	)
@@ -65,10 +67,10 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 	return id, nil
 }
 
-func (r *repo) PauseItem(ctx context.Context, itemID int64) error {
+func (r *repo) ChangeItemState(ctx context.Context, itemID int64, status string) error {
 	query, args, err := sq.Update("public.item").
 		Where(sq.Eq{"id": itemID}).
-		Set("status", item.PausedStatus).
+		Set("status", status).
 		Set("updated_at", time.Now()).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
@@ -80,6 +82,25 @@ func (r *repo) PauseItem(ctx context.Context, itemID int64) error {
 		return err
 	}
 	return nil
+}
+
+func (r *repo) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
+	query, args, err := sq.Select("*").From(`public.item`).
+		Where(sq.Eq{"id": id}).
+		Limit(1).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []item.Item
+	if err := r.db.SelectContext(ctx, &res, query, args...); err != nil {
+		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return &res[0], nil
 }
 
 func (r *repo) FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64, cursor int64) ([]item.Item, error) {

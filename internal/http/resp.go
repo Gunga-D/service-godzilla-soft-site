@@ -65,7 +65,7 @@ func Return409(msg string, w http.ResponseWriter) {
 
 func Return500(msg string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusInternalServerError)
 
 	json.NewEncoder(w).Encode(response{
 		Status:     "error",

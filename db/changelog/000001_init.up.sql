@@ -18,6 +18,8 @@ create table if not exists public.user (
     updated_at timestamp without time zone
 );
 
+create unique index user_email_unique_idx on public.user (email);
+
 create table if not exists public.item (
     id bigserial primary key,
     title text not null,
@@ -42,3 +44,5 @@ create table if not exists public.code (
     created_at timestamp without time zone,
     updated_at timestamp without time zone
 );
+
+create index if not exists code_status_idx on code (status);

@@ -21,21 +21,26 @@ func NewRepo(db postgres.TxDatabase) *repo {
 	}
 }
 
-func (r *repo) CreateCode(ctx context.Context, itemID int64, value string) error {
-	query, args, err := sq.Insert("public.code").
+func (r *repo) CreateCodes(ctx context.Context, itemID int64, values []string) error {
+	q := sq.Insert("public.code").
 		Columns(
 			"value",
 			"item_id",
 			"status",
 			"created_at",
 			"updated_at",
-		).Values(
-		itemID,
-		value,
-		code.FreeStatus,
-		time.Now(),
-		time.Now(),
-	).
+		)
+	for _, value := range values {
+		q = q.Values(
+			value,
+			itemID,
+			code.FreeStatus,
+			time.Now(),
+			time.Now(),
+		)
+	}
+
+	query, args, err := q.
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/code"
@@ -25,12 +26,12 @@ func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, item
 	err := r.db.WithTx(ctx, func(ctx context.Context) error {
 		codeValue, err := r.blockCode(ctx, itemID)
 		if err != nil {
-			return err
+			return fmt.Errorf("block code: %v", err)
 		}
 
 		newOrderID, err := r.insertOrder(ctx, email, amount, codeValue)
 		if err != nil {
-			return err
+			return fmt.Errorf("insert order: %v", err)
 		}
 		orderID = newOrderID
 		return nil
@@ -120,7 +121,7 @@ RETURNING code_value
 }
 
 func (r *repo) insertOrder(ctx context.Context, email string, amount int64, codeValue string) (string, error) {
-	q := sq.Insert("public.item").
+	q := sq.Insert("public.order").
 		Columns(
 			"email",
 			"code_value",
@@ -154,38 +155,13 @@ func (r *repo) insertOrder(ctx context.Context, email string, amount int64, code
 }
 
 func (r *repo) blockCode(ctx context.Context, itemID int64) (string, error) {
-	selectCodeQ := sq.
-		Select("value").
-		From("public.code").
-		Where(sq.And{
-			sq.Eq{"status": code.FreeStatus},
-			sq.Eq{"item_id": itemID},
-		}).
-		Limit(1)
-
-	q := sq.Update("public.code").
-		Where(sq.Eq{"value": subQuery(selectCodeQ)}).
-		Set("status", code.BlockedStatus).
-		Set("updated_at", time.Now())
-
-	query, args, err := q.
-		Suffix(`
-	RETURNING value
-`).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return "", err
-	}
-
 	var codeValue string
-	if err := r.db.Do(ctx).GetContext(ctx, &codeValue, query, args...); err != nil {
+	if err := r.db.Do(ctx).GetContext(ctx, &codeValue, `
+		update public.code set status=$1, updated_at=$2 where
+		value=(select value from public.code where status=$3 and item_id=$4 limit 1)
+		returning value
+	`, code.BlockedStatus, time.Now(), code.FreeStatus, itemID); err != nil {
 		return "", err
 	}
 	return codeValue, nil
-}
-
-func subQuery(sb sq.SelectBuilder) sq.Sqlizer {
-	sql, params, _ := sb.ToSql()
-	return sq.Expr("("+sql+")", params)
 }

@@ -1,7 +1,8 @@
 package databus
 
-type ItemOutOfStockDTO struct {
-	ItemID int64 `json:"item_id"`
+type ChangeItemStateDTO struct {
+	ItemID int64  `json:"item_id"`
+	Status string `json:"status"`
 }
 
 type QuickUserRegistrationDTO struct {

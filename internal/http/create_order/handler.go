@@ -1,11 +1,15 @@
 package create_order
 
 import (
+	"database/sql"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 )
 
 type handler struct {
@@ -44,6 +48,11 @@ func (h *handler) Handle() http.HandlerFunc {
 		if body.Email != nil {
 			userEmail = *body.Email
 
+			if ok := auth.ValidateEmail(userEmail); !ok {
+				api.Return400("Некорректная почта, исправьте ее и попробуйте еще раз", w)
+				return
+			}
+
 			err = h.userRegistrationDatabus.PublishDatabusQuickUserRegistration(r.Context(), databus.QuickUserRegistrationDTO{
 				Email: userEmail,
 			})
@@ -52,11 +61,23 @@ func (h *handler) Handle() http.HandlerFunc {
 				return
 			}
 		} else {
-			userEmail = r.Context().Value(user.MetaUserEmailKey{}).(string)
+			email, ok := r.Context().Value(user.MetaUserEmailKey{}).(string)
+			if !ok {
+				api.Return401("Ошибка авторизации", w)
+				return
+			}
+			userEmail = email
 		}
 
 		orderID, err := h.orderCreator.CreateOrder(r.Context(), userEmail, item.CurrentPrice, item.ID)
 		if err != nil {
+			log.Printf("[error] create order: %v", err)
+
+			if strings.Contains(err.Error(), sql.ErrNoRows.Error()) {
+				api.Return404("Данный товар закончился", w)
+				return
+			}
+
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}

@@ -15,17 +15,18 @@ type client struct {
 func NewClient(ctx context.Context) *client {
 	return &client{
 		amqp: amqp.Get(ctx, []string{
-			"queue-item-out-of-stock",
+			"queue-item-change-item-state",
+			"queue-quick-user-registration",
 		}),
 	}
 }
 
-func (c *client) PublishDatabusItemOutOfStockDTO(ctx context.Context, msg ItemOutOfStockDTO) error {
+func (c *client) PublishDatabusChangeItemState(ctx context.Context, msg ChangeItemStateDTO) error {
 	raw, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}
-	return c.amqp.PublishWithContext(ctx, "", "queue-item-out-of-stock", true, false, sdk_amqp.Publishing{
+	return c.amqp.PublishWithContext(ctx, "", "queue-item-change-item-state", true, false, sdk_amqp.Publishing{
 		ContentType: "application/json",
 		Body:        raw,
 	})
@@ -40,4 +41,12 @@ func (c *client) PublishDatabusQuickUserRegistration(ctx context.Context, msg Qu
 		ContentType: "application/json",
 		Body:        raw,
 	})
+}
+
+func (c *client) ConsumeDatabusChangeItemState(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-item-change-item-state", "", false, false, false, false, nil)
+}
+
+func (c *client) ConsumeDatabusQuickUserRegistration(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-quick-user-registration", "", false, false, false, false, nil)
 }

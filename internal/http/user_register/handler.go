@@ -33,6 +33,11 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
+		if ok := auth.ValidateEmail(req.Email); !ok {
+			api.Return400("Почта пользователя невалидная", w)
+			return
+		}
+
 		userID, err := h.userRepo.CreateUser(r.Context(), user.User{
 			Email:    req.Email,
 			Password: auth.GeneratePassword(r.Context(), req.Password),

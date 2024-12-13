@@ -5,6 +5,7 @@ import (
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 )
 
 type handler struct {
@@ -29,24 +30,25 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		item, err := h.itemGetter.GetItemByID(r.Context(), body.ItemID)
+		i, err := h.itemGetter.GetItemByID(r.Context(), body.ItemID)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
-		if item == nil {
+		if i == nil {
 			api.Return404("Такого товара нет в наличии", w)
 			return
 		}
 
-		hasCodes, err := h.codeRepo.HasActiveCode(r.Context(), body.ItemID)
+		hasCodes, err := h.codeRepo.HasActiveCode(r.Context(), i.ID)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
 		if !hasCodes {
-			h.itemOutOfStockDatabus.PublishDatabusItemOutOfStockDTO(r.Context(), databus.ItemOutOfStockDTO{
+			h.itemOutOfStockDatabus.PublishDatabusChangeItemState(r.Context(), databus.ChangeItemStateDTO{
 				ItemID: body.ItemID,
+				Status: item.PausedStatus,
 			})
 
 			api.Return409("Данный товар уже закончился", w)
@@ -54,7 +56,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		api.ReturnOK(CartItemResponsePayload{
-			Price:    float64(item.CurrentPrice) / 100,
+			Price:    float64(i.CurrentPrice) / 100,
 			Currency: "RUB",
 		}, w)
 	}

@@ -39,19 +39,17 @@ func (c *cache) StartSync(ctx context.Context) {
 	if err := c.sync(ctx, _itemsPerRequestLimit); err != nil {
 		log.Fatalf("[error] failed to sync items: %v\n", err)
 	}
-	log.Printf("[info] sync items\n")
 
 	t := time.NewTicker(5 * time.Minute)
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("[info] sync items stop\n")
+			log.Println("[info] sync items stop")
 			return
 		case <-t.C:
 			if err := c.sync(ctx, _itemsPerRequestLimit); err != nil {
 				log.Printf("[error] failed to sync items: %v\n", err)
 			}
-			log.Printf("[info] sync items\n")
 		}
 	}
 }
@@ -73,7 +71,7 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 			newItemsByID[gotItem.ID] = gotItem
 		}
 
-		if len(newItemsByID) < int(limit) {
+		if len(gotItems) < int(limit) {
 			break
 		}
 		cursor = gotItems[len(gotItems)-1].ID

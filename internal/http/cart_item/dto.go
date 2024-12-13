@@ -1,7 +1,7 @@
 package cart_item
 
 type CartItemRequest struct {
-	ItemID int64 `json:"itemID"`
+	ItemID int64 `json:"item_id"`
 }
 
 type CartItemResponsePayload struct {
