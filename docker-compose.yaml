@@ -1,7 +1,7 @@
 version: '2.4'
 
 networks:
-  service-steam-invoice:
+  service-godzilla-soft-site:
     driver: bridge
     name: service-godzilla-soft-site
 

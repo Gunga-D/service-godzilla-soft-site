@@ -22,7 +22,9 @@ func main() {
 
 	orderRepo := order_postgres.NewRepo(postgres)
 
-	yandexMailClient := yandex_mail.NewClient(os.Getenv(""), os.Getenv(""), os.Getenv(""))
+	yandexMailClient := yandex_mail.NewClient(os.Getenv("YANDEX_MAIL_ADDRESS"),
+		os.Getenv("YANDEX_MAIL_LOGIN"),
+		os.Getenv("YANDEX_MAIL_PASSWORD"))
 
 	dt, err := template.ParseFiles("assets/delivery-order-template.html")
 	if err != nil {
