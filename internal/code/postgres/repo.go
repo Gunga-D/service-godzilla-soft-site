@@ -21,11 +21,11 @@ func NewRepo(db postgres.TxDatabase) *repo {
 	}
 }
 
-func (r *repo) CreateCode(ctx context.Context, itemID int64, value string) (int64, error) {
-	q := sq.Insert("public.code").
+func (r *repo) CreateCode(ctx context.Context, itemID int64, value string) error {
+	query, args, err := sq.Insert("public.code").
 		Columns(
-			"item_id",
 			"value",
+			"item_id",
 			"status",
 			"created_at",
 			"updated_at",
@@ -35,26 +35,21 @@ func (r *repo) CreateCode(ctx context.Context, itemID int64, value string) (int6
 		code.FreeStatus,
 		time.Now(),
 		time.Now(),
-	)
-	query, args, err := q.
-		Suffix(`
-		RETURNING id
-	`).
+	).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	var id int64
-	if err := r.db.GetContext(ctx, &id, query, args...); err != nil {
-		return 0, err
+	if _, err := r.db.ExecContext(ctx, query, args...); err != nil {
+		return err
 	}
-	return id, nil
+	return nil
 }
 
 func (r *repo) HasActiveCode(ctx context.Context, itemID int64) (bool, error) {
-	query, args, err := sq.Select(`id`).
+	query, args, err := sq.Select(`value`).
 		From("public.code").
 		Where(sq.Eq{
 			"item_id": itemID,
@@ -65,8 +60,8 @@ func (r *repo) HasActiveCode(ctx context.Context, itemID int64) (bool, error) {
 		return false, err
 	}
 
-	var id int
-	err = r.db.GetContext(ctx, &id, query, args...)
+	var value string
+	err = r.db.GetContext(ctx, &value, query, args...)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil

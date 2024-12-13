@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,6 +26,8 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/service"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/transport/listener"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
@@ -79,4 +82,11 @@ func main() {
 
 		r1.Post("/payment_notification", payment_notification.NewHandler().Handle())
 	})
+
+	log.Println("[info] server start up")
+	err := service.Listen(ctx, listener.NewHTTP(), mux)
+	if err != nil {
+		log.Printf("[error] server finished with an error: %v", err)
+		return
+	}
 }
