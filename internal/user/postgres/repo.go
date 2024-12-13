@@ -51,9 +51,7 @@ func (r *repo) CreateUser(ctx context.Context, usr user.User) (int64, error) {
 
 func (r *repo) GetUserByEmail(ctx context.Context, email string) (*user.User, error) {
 	query, args, err := sq.Select("*").From(`public.user`).
-		Where(sq.And{
-			sq.Eq{"email": email},
-		}).
+		Where(sq.Eq{"email": email}).
 		Limit(1).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {

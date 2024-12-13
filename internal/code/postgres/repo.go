@@ -25,7 +25,7 @@ func (r *repo) CreateCode(ctx context.Context, itemID int64, value string) (int6
 	q := sq.Insert("public.code").
 		Columns(
 			"item_id",
-			"code",
+			"value",
 			"status",
 			"created_at",
 			"updated_at",

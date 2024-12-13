@@ -60,8 +60,12 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
+
+		// TODO: Реализовать логику создания ссылки на оплату
+
 		api.ReturnOK(CreateOrderResponsePayload{
-			OrderID:     orderID,
+			OrderID: orderID,
+			// TODO: Добавить ссылку на оплату
 			PaymentLink: "",
 		}, w)
 	}
