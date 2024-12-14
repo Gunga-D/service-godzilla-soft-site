@@ -15,16 +15,18 @@ const (
 )
 
 type cache struct {
-	itemsByID map[int64]item.Item
-	getter    getter
-	lock      *sync.RWMutex
+	itemsByID  map[int64]item.Item
+	itemByName map[string]item.Item
+	getter     getter
+	lock       *sync.RWMutex
 }
 
 func NewCache(getter getter) *cache {
 	return &cache{
-		itemsByID: make(map[int64]item.Item),
-		getter:    getter,
-		lock:      &sync.RWMutex{},
+		itemsByID:  make(map[int64]item.Item),
+		itemByName: make(map[string]item.Item),
+		getter:     getter,
+		lock:       &sync.RWMutex{},
 	}
 }
 
@@ -61,6 +63,7 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 
 	cursor := int64(0)
 	newItemsByID := make(map[int64]item.Item)
+	newItemsByName := make(map[string]item.Item)
 	for {
 		gotItems, err := c.getter.FetchItemsPaginatedCursorItemId(ctx, limit, cursor)
 		if err != nil {
@@ -69,6 +72,7 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 
 		for _, gotItem := range gotItems {
 			newItemsByID[gotItem.ID] = gotItem
+			newItemsByName[gotItem.Title] = gotItem
 		}
 
 		if len(gotItems) < int(limit) {
@@ -80,6 +84,7 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.itemsByID = newItemsByID
+	c.itemByName = newItemsByName
 	return nil
 }
 
@@ -88,6 +93,17 @@ func (c *cache) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
 	defer c.lock.RUnlock()
 
 	res, found := c.itemsByID[id]
+	if !found {
+		return nil, nil
+	}
+	return &res, nil
+}
+
+func (c *cache) GetItemByName(ctx context.Context, name string) (*item.Item, error) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	res, found := c.itemByName[name]
 	if !found {
 		return nil, nil
 	}

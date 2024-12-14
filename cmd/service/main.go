@@ -19,10 +19,12 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/item_details"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/mdw"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/payment_notification"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/search_suggest"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/suggest"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
@@ -45,6 +47,8 @@ func main() {
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemCache := item_cache.NewCache(itemRepo)
 	go itemCache.StartSync(ctx)
+	itemSuggestSrv := suggest.NewService(itemRepo)
+	go itemSuggestSrv.StartSync(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres)
 	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
@@ -74,6 +78,7 @@ func main() {
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())
 
+		r1.Post("/search_suggest", search_suggest.NewHandler(itemSuggestSrv, itemCache).Handle())
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
 		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
