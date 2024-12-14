@@ -10,10 +10,10 @@ import (
 )
 
 type handler struct {
-	itemsRepo item.Repository
+	itemsRepo item.WriteRepository
 }
 
-func NewHandler(itemsRepo item.Repository) *handler {
+func NewHandler(itemsRepo item.WriteRepository) *handler {
 	return &handler{
 		itemsRepo: itemsRepo,
 	}

@@ -103,6 +103,25 @@ func (r *repo) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
 	return &res[0], nil
 }
 
+func (r *repo) FetchItemsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64) ([]item.Item, error) {
+	query, args, err := sq.Select("*").From(`public.item`).
+		Where(criteria).
+		OrderBy("id").
+		Limit(limit).
+		Offset(offset).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []item.Item
+	err = r.db.SelectContext(ctx, &res, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func (r *repo) FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64, cursor int64) ([]item.Item, error) {
 	query, args, err := sq.Select("*").From(`public.item`).
 		Where(sq.And{
