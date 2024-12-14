@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"text/template"
 
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
@@ -22,16 +21,18 @@ type htmlRegistrationTemplateData struct {
 type handler struct {
 	consumer             databus.Consumer
 	userRepo             userRepo
-	yandexMailClient     yandex_mail.Client
 	registrationTemplate *template.Template
+	sendToEmailDatabus   sendToEmailDatabus
 }
 
-func NewHandler(consumer databus.Consumer, userRepo userRepo, yandexMailClient yandex_mail.Client, registrationTemplate *template.Template) *handler {
+func NewHandler(consumer databus.Consumer, userRepo userRepo,
+	registrationTemplate *template.Template, sendToEmailDatabus sendToEmailDatabus) *handler {
+
 	return &handler{
 		consumer:             consumer,
 		userRepo:             userRepo,
-		yandexMailClient:     yandexMailClient,
 		registrationTemplate: registrationTemplate,
+		sendToEmailDatabus:   sendToEmailDatabus,
 	}
 }
 
@@ -69,22 +70,23 @@ func (h *handler) Consume(ctx context.Context) {
 			continue
 		}
 
-		// TODO: Стоит это выделить в отдельную очередь
-		err = h.yandexMailClient.SendMail([]string{
-			data.Email,
-		}, "Регистрация на сайте Godzilla Soft", body.String())
-		if err != nil {
-			log.Printf("[error] cannot send to user: %v\n", err)
-			msg.Nack(false, true)
-			continue
-		}
-
 		_, err = h.userRepo.CreateUser(ctx, user.User{
 			Email:    data.Email,
 			Password: auth.GeneratePassword(ctx, newPwd),
 		})
 		if err != nil {
 			log.Printf("[error] cannot create user: %v\n", err)
+			msg.Nack(false, true)
+			continue
+		}
+
+		err = h.sendToEmailDatabus.PublishDatabusSendToEmail(ctx, databus.SendToEmailDTO{
+			Email:   data.Email,
+			Subject: "Регистрация на сайте Godzilla Soft",
+			Body:    body.String(),
+		})
+		if err != nil {
+			log.Printf("[error] cannot send to user: %v\n", err)
 			msg.Nack(false, true)
 			continue
 		}

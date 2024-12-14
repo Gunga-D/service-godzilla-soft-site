@@ -8,3 +8,9 @@ type ChangeItemStateDTO struct {
 type QuickUserRegistrationDTO struct {
 	Email string `json:"email"`
 }
+
+type SendToEmailDTO struct {
+	Email   string `json:"email"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}

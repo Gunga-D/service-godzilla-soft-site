@@ -17,6 +17,7 @@ func NewClient(ctx context.Context) *client {
 		amqp: amqp.Get(ctx, []string{
 			"queue-item-change-item-state",
 			"queue-quick-user-registration",
+			"queue-send-to-email",
 		}),
 	}
 }
@@ -43,10 +44,25 @@ func (c *client) PublishDatabusQuickUserRegistration(ctx context.Context, msg Qu
 	})
 }
 
+func (c *client) PublishDatabusSendToEmail(ctx context.Context, msg SendToEmailDTO) error {
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return c.amqp.PublishWithContext(ctx, "", "queue-send-to-email", true, false, sdk_amqp.Publishing{
+		ContentType: "application/json",
+		Body:        raw,
+	})
+}
+
 func (c *client) ConsumeDatabusChangeItemState(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-item-change-item-state", "", false, false, false, false, nil)
 }
 
 func (c *client) ConsumeDatabusQuickUserRegistration(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-quick-user-registration", "", false, false, false, false, nil)
+}
+
+func (c *client) ConsumeDatabusSendToEmail(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-send-to-email", "", false, false, false, false, nil)
 }

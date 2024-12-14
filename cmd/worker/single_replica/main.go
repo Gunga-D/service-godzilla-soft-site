@@ -12,6 +12,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/change_item_state"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/quick_user_registration"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/send_to_email"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
@@ -41,7 +42,10 @@ func main() {
 	go change_item_state.NewHandler(databusClient, itemRepo).Consume(ctx)
 
 	log.Println("start consume quick user registration databus")
-	go quick_user_registration.NewHandler(databusClient, userRepo, yandexMailClient, rt).Consume(ctx)
+	go quick_user_registration.NewHandler(databusClient, userRepo, rt, databusClient).Consume(ctx)
+
+	log.Println("start consume send to email databus")
+	go send_to_email.NewHandler(databusClient, yandexMailClient).Consume(ctx)
 
 	<-ctx.Done()
 }

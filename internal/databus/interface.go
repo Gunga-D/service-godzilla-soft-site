@@ -9,4 +9,5 @@ import (
 type Consumer interface {
 	ConsumeDatabusChangeItemState(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
 	ConsumeDatabusQuickUserRegistration(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
+	ConsumeDatabusSendToEmail(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
 }

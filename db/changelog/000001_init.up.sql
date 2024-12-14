@@ -37,6 +37,8 @@ create table if not exists public.item (
     updated_at timestamp without time zone
 );
 
+create unique index item_title_unique_idx on public.item (title);
+
 create table if not exists public.code (
 	value text primary key,
     item_id bigint not null,
