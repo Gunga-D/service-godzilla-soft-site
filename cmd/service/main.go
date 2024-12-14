@@ -18,7 +18,11 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/create_order"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/item_details"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/mdw"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/new_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/payment_notification"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/popular_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/recomendation_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sales_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/search_suggest"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
@@ -81,6 +85,10 @@ func main() {
 		r1.Post("/search_suggest", search_suggest.NewHandler(itemSuggestSrv, itemCache).Handle())
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
+		r1.Get("/popular_items", popular_items.NewHandler(itemCache).Handle())
+		r1.Get("/recomendation_items", recomendation_items.NewHandler(itemCache).Handle())
+		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())
+		r1.Get("/new_items", new_items.NewHandler(itemCache).Handle())
 		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
 
 		r1.Route("/", func(r2 chi.Router) {
