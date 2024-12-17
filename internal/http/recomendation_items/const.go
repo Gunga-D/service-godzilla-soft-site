@@ -6,4 +6,5 @@ var recomendationItems = []int64{
 	2,
 	3,
 	4,
+	5,
 }
