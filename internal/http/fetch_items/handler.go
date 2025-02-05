@@ -31,7 +31,9 @@ func (h *handler) Handle() http.HandlerFunc {
 			offset = 0
 		}
 
-		criteries := sq.And{}
+		criteries := sq.And{
+			sq.Eq{"status": item.ActiveStatus},
+		}
 		if v, err := strconv.ParseFloat(r.URL.Query().Get("min_price"), 64); err == nil {
 			criteries = append(criteries, sq.GtOrEq{"current_price": int64(v * 100)})
 		}
