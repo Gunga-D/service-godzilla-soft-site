@@ -74,7 +74,7 @@ func main() {
 	})
 	mux.Use(c.Handler)
 
-	mux.Route("/api/v1", func(r1 chi.Router) {
+	mux.Route("/v1", func(r1 chi.Router) {
 		r1.Route("/admin", func(r2 chi.Router) {
 			r2.Use(mdw.NewBearerMDW(os.Getenv("ADMIN_SECRET_KEY")).VerifyUser)
 			r2.Post("/warmup_items", admin_warmup_items.NewHandler(itemCache).Handle())
