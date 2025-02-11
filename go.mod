@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.5
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -27,6 +28,7 @@ require (
 	github.com/snowballstem/snowball v2.0.0+incompatible // indirect
 	github.com/tinylib/msgp v1.1.0 // indirect
 	github.com/willf/bitset v1.1.10 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
+	golang.org/x/sys v0.28.0 // indirect
 )

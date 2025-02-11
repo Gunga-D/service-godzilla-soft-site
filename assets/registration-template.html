@@ -1,8 +1,93 @@
 <!-- template.html -->
 <!DOCTYPE html>
-<html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация на GodzillaSoft</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333333;
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #555555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        .credentials {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .credentials p {
+            margin: 5px 0;
+            font-size: 16px;
+            color: #333333;
+        }
+        .credentials strong {
+            color: #ff5722; /* Оранжевый цвет, как у Godzilla */
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 150px;
+            height: auto;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777777;
+        }
+        .footer a {
+            color: #ff5722;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
 <body>
-    <h3>Login:</h3><span>{{.Login}}</span><br/><br/>
-    <h3>Password:</h3><span>{{.Password}}</span><br/><br/>
+    <div class="container">
+        <h1>Регистрация на GodzillaSoft</h1>
+        <p>Здравствуйте!</p>
+        <p>Благодарим вас за регистрацию на сайте <strong>GodzillaSoft</strong>. Ваш аккаунт был успешно создан. Ниже вы найдете ваши учетные данные для входа:</p>
+
+        <!-- Блок с логином и паролем -->
+        <div class="credentials">
+            <p><strong>Логин:</strong>{{.Login}}</p>
+            <p><strong>Пароль:</strong>{{.Password}}</p>
+        </div>
+
+        <p>Пожалуйста, сохраните эти данные в надежном месте. Вы можете использовать их для входа в ваш аккаунт на нашем сайте.</p>
+        <p>Если у вас возникнут вопросы или потребуется помощь, свяжитесь с нашей службой поддержки.</p>
+        <p>С уважением,<br>Команда <strong>GodzillaSoft</strong></p>
+        <div class="footer">
+            Это письмо было отправлено автоматически. Пожалуйста, не отвечайте на него.<br>
+            Если вам нужна помощь, посетите <a href="https://t.me/godzilla_sof">наш центр поддержки</a>.
+        </div>
+    </div>
 </body>
 </html>

@@ -42,6 +42,23 @@ func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, item
 	return orderID, nil
 }
 
+func (r *repo) PaidOrder(ctx context.Context, orderID string) error {
+	query, args, err := sq.Update("public.order").
+		Where(sq.Eq{"id": orderID}).
+		Set("status", order.PaidStatus).
+		Set("updated_at", time.Now()).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	if _, err := r.db.Do(ctx).ExecContext(ctx, query, args...); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *repo) FinishOrder(ctx context.Context, orderID string) error {
 	return r.db.WithTx(ctx, func(ctx context.Context) error {
 		codeValue, err := r.setOrderStatus(ctx, orderID, order.FinishedStatus)

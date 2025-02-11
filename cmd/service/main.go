@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
@@ -49,6 +50,8 @@ func main() {
 	postgres := postgres.Get(ctx)
 
 	databusClient := databus.NewClient(ctx)
+
+	tinkoffClient := tinkoff.NewClient(os.Getenv("TINKOFF_API_URL"), os.Getenv("TINKOFF_PASSWORD"), os.Getenv("TINKOFF_TERMINAL_KEY"))
 
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemCache := item_cache.NewCache(itemRepo)
@@ -98,10 +101,10 @@ func main() {
 		r1.Route("/", func(r2 chi.Router) {
 			r2.Use(mdw.NewJWT(authJWT).VerifyUser)
 			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache, databusClient).Handle())
-			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, databusClient).Handle())
+			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, tinkoffClient, databusClient).Handle())
 		})
 
-		r1.Post("/payment_notification", payment_notification.NewHandler().Handle())
+		r1.Post("/payment_notification", payment_notification.NewHandler(orderRepo).Handle())
 	})
 
 	log.Println("[info] server start up")

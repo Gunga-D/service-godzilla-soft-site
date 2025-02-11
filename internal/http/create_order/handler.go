@@ -2,10 +2,12 @@ package create_order
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
@@ -15,13 +17,19 @@ import (
 type handler struct {
 	itemGetter              itemGetter
 	orderCreator            orderCreator
+	tinkoffClient           tinkoff.Client
 	userRegistrationDatabus userRegistrationDatabus
 }
 
-func NewHandler(itemGetter itemGetter, orderCreator orderCreator, userRegistrationDatabus userRegistrationDatabus) *handler {
+func NewHandler(itemGetter itemGetter,
+	orderCreator orderCreator,
+	tinkoffClient tinkoff.Client,
+	userRegistrationDatabus userRegistrationDatabus) *handler {
+
 	return &handler{
 		itemGetter:              itemGetter,
 		orderCreator:            orderCreator,
+		tinkoffClient:           tinkoffClient,
 		userRegistrationDatabus: userRegistrationDatabus,
 	}
 }
@@ -82,12 +90,17 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		// TODO: Реализовать логику создания ссылки на оплату
+		invoiceResp, err := h.tinkoffClient.CreateInvoice(r.Context(), orderID, item.CurrentPrice, fmt.Sprintf("Покупка \"%s\"", item.Title))
+		if err != nil {
+			log.Printf("[error] cannot create invoice: %v", err)
+
+			api.Return500("Неизвестная ошибка", w)
+			return
+		}
 
 		api.ReturnOK(CreateOrderResponsePayload{
-			OrderID: orderID,
-			// TODO: Добавить ссылку на оплату
-			PaymentLink: "",
+			OrderID:     orderID,
+			PaymentLink: invoiceResp.PaymentURL,
 		}, w)
 	}
 }
