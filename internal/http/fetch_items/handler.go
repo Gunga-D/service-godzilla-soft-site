@@ -2,6 +2,7 @@ package fetch_items
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/AlekSi/pointer"
@@ -44,7 +45,12 @@ func (h *handler) Handle() http.HandlerFunc {
 			criteries = append(criteries, sq.Eq{"category_id": v})
 		}
 		if v := r.URL.Query().Get("region"); v != "" {
-			criteries = append(criteries, sq.Eq{"region": v})
+			decodedV, err := url.QueryUnescape(v)
+			if err != nil {
+				api.Return400("Параметр region должен быть в формате url encoded", w)
+				return
+			}
+			criteries = append(criteries, sq.Eq{"region": decodedV})
 		}
 		if v := r.URL.Query().Get("platform"); v != "" {
 			criteries = append(criteries, sq.Eq{"platform": v})
