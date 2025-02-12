@@ -37,17 +37,21 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		newItemID, err := h.itemsRepo.CreateItem(r.Context(), item.Item{
-			Title:        req.Title,
-			Description:  req.Description,
-			CategoryID:   req.CategoryID,
-			Platform:     req.Platform,
-			Region:       req.Region,
-			CurrentPrice: int64(req.CurrentPrice * 100),
-			IsForSale:    req.IsForSale,
-			OldPrice:     oldPrice,
-			ThumbnailURL: req.ThumbnailURL,
-			Status:       item.ActiveStatus,
-			Slip:         req.Slip,
+			Title:         req.Title,
+			Description:   req.Description,
+			CategoryID:    req.CategoryID,
+			Platform:      req.Platform,
+			Region:        req.Region,
+			Publisher:     req.Publisher,
+			Creator:       req.Creator,
+			ReleaseDate:   req.ReleaseDate,
+			CurrentPrice:  int64(req.CurrentPrice * 100),
+			IsForSale:     req.IsForSale,
+			OldPrice:      oldPrice,
+			ThumbnailURL:  req.ThumbnailURL,
+			BackgroundURL: req.BackgroundURL,
+			Status:        item.ActiveStatus,
+			Slip:          req.Slip,
 		})
 		if err != nil {
 			api.Return500(err.Error(), w)

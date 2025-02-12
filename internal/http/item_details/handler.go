@@ -41,17 +41,21 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		api.ReturnOK(ItemDTO{
-			ID:           item.ID,
-			Title:        item.Title,
-			Description:  item.Description,
-			CategoryID:   item.CategoryID,
-			Platform:     item.Platform,
-			Region:       item.Region,
-			CurrentPrice: float64(item.CurrentPrice) / 100,
-			IsForSale:    item.IsForSale,
-			OldPrice:     oldPrice,
-			ThumbnailURL: item.ThumbnailURL,
-			Slip:         item.Slip,
+			ID:            item.ID,
+			Title:         item.Title,
+			Description:   item.Description,
+			CategoryID:    item.CategoryID,
+			Platform:      item.Platform,
+			Region:        item.Region,
+			Publisher:     item.Publisher,
+			Creator:       item.Creator,
+			ReleaseDate:   item.ReleaseDate,
+			CurrentPrice:  float64(item.CurrentPrice) / 100,
+			IsForSale:     item.IsForSale,
+			OldPrice:      oldPrice,
+			ThumbnailURL:  item.ThumbnailURL,
+			BackgroundURL: item.BackgroundURL,
+			Slip:          item.Slip,
 		}, w)
 	}
 }
