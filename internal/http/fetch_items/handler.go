@@ -1,6 +1,7 @@
 package fetch_items
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -50,6 +51,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				api.Return400("Параметр region должен быть в формате url encoded", w)
 				return
 			}
+			log.Printf("trying to fetch items with region - %s", decodedV)
 			criteries = append(criteries, sq.Eq{"region": decodedV})
 		}
 		if v := r.URL.Query().Get("platform"); v != "" {
