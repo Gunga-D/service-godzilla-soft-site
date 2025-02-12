@@ -64,6 +64,7 @@ func (c *client) CreateInvoice(ctx context.Context, orderID string, amount int64
 	if resp.StatusCode() != http.StatusOK {
 		return nil, fmt.Errorf("cannot create invoice: \n%s", string(resp.Body()))
 	}
+	log.Printf("Tinkoff body:\n%s\n", string(resp.Body()))
 	return resp.Result().(*CreateInvoiceResponse), nil
 }
 
