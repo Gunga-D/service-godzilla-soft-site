@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"html/template"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
-	"text/template"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
 	order_delivery "github.com/Gunga-D/service-godzilla-soft-site/internal/order/delivery"
@@ -26,7 +27,12 @@ func main() {
 		os.Getenv("YANDEX_MAIL_LOGIN"),
 		os.Getenv("YANDEX_MAIL_PASSWORD"))
 
-	dt, err := template.ParseFiles("assets/delivery-order-template.html")
+	funcMap := template.FuncMap{
+		"nl2br": func(text string) template.HTML {
+			return template.HTML(strings.ReplaceAll(text, "\n", "<br>"))
+		},
+	}
+	dt, err := template.New("delivery-order-template.html").Funcs(funcMap).ParseFiles("assets/delivery-order-template.html")
 	if err != nil {
 		log.Fatalln("failed loading html templates")
 	}

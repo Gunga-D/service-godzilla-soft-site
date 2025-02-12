@@ -12,7 +12,6 @@ type email struct {
 	body    string
 }
 
-// Генерирует тело сообщения
 func (email *email) BuildMessage() []byte {
 	enter := "\r\n"
 	mimeHeaders := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"

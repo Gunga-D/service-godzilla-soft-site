@@ -21,7 +21,7 @@ func NewRepo(db postgres.TxDatabase) *repo {
 	}
 }
 
-func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, itemID int64) (string, error) {
+func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string) (string, error) {
 	var orderID string
 	err := r.db.WithTx(ctx, func(ctx context.Context) error {
 		codeValue, err := r.blockCode(ctx, itemID)
@@ -29,7 +29,7 @@ func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, item
 			return fmt.Errorf("block code: %v", err)
 		}
 
-		newOrderID, err := r.insertOrder(ctx, email, amount, codeValue)
+		newOrderID, err := r.insertOrder(ctx, email, amount, codeValue, itemSlip)
 		if err != nil {
 			return fmt.Errorf("insert order: %v", err)
 		}
@@ -82,7 +82,7 @@ func (r *repo) FailedOrder(ctx context.Context, orderID string) error {
 }
 
 func (r *repo) FetchPaidOrders(ctx context.Context) ([]order.PaidOrder, error) {
-	query, args, err := sq.Select("id, email, code_value").From(`public.order`).
+	query, args, err := sq.Select("id, email, code_value, item_slip").From(`public.order`).
 		Where(sq.Eq{"status": order.PaidStatus}).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -137,11 +137,12 @@ RETURNING code_value
 	return codeValue, nil
 }
 
-func (r *repo) insertOrder(ctx context.Context, email string, amount int64, codeValue string) (string, error) {
+func (r *repo) insertOrder(ctx context.Context, email string, amount int64, codeValue string, itemSlip string) (string, error) {
 	q := sq.Insert("public.order").
 		Columns(
 			"email",
 			"code_value",
+			"item_slip",
 			"amount",
 			"status",
 			"created_at",
@@ -149,6 +150,7 @@ func (r *repo) insertOrder(ctx context.Context, email string, amount int64, code
 		).Values(
 		email,
 		codeValue,
+		itemSlip,
 		amount,
 		order.PendingStatus,
 		time.Now(),

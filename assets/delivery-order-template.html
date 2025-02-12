@@ -75,6 +75,18 @@
             margin: 10px 0;
             text-align: center;
         }
+        .instructions {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            white-space: pre-line;
+        }
+        .instructions h2 {
+            font-size: 20px;
+            color: #333333;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -83,6 +95,13 @@
         <p>Здравствуйте! ID вашего заказа: <span class="order-id">{{.ID}}</span></p>
         <p>Благодарим вас за выбор <strong>GodzillaSoft</strong>! Ваш код активации:</p>
         <div class="code">{{.CodeValue}}</div>
+
+        <!-- Инструкция по активации -->
+        <div class="instructions">
+            <h2>Инструкция по активации товара:</h2>
+            <p>{{.ItemSlip | nl2br}}</p>
+        </div>
+
         <p>Пожалуйста, используйте этот код для активации вашего товара. Если у вас возникнут вопросы, свяжитесь с нашей службой поддержки.</p>
         <p>С уважением,<br>Команда <strong>GodzillaSoft</strong></p>
         <div class="footer">

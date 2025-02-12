@@ -3,8 +3,8 @@ package delivery
 import (
 	"bytes"
 	"context"
+	"html/template"
 	"log"
-	"text/template"
 	"time"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"

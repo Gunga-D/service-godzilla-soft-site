@@ -12,7 +12,7 @@ type itemGetter interface {
 }
 
 type orderCreator interface {
-	CreateOrder(ctx context.Context, email string, amount int64, itemID int64) (string, error)
+	CreateOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string) (string, error)
 }
 
 type userRegistrationDatabus interface {

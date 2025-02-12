@@ -1,0 +1,1 @@
+alter table public.order add column item_slip text;
