@@ -1,10 +1,12 @@
 package search_suggest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type handler struct {
@@ -26,6 +28,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return400("Невалидный запрос", w)
 			return
 		}
+		logger.Get().Log(fmt.Sprintf("🔍 Поиск товара по следующему запросу: \"%s\"", body.Query))
 
 		items, err := h.suggester.Suggest(body.Query)
 		if err != nil {

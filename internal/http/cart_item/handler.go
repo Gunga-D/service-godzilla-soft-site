@@ -1,11 +1,13 @@
 package cart_item
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type handler struct {
@@ -50,6 +52,8 @@ func (h *handler) Handle() http.HandlerFunc {
 				ItemID: body.ItemID,
 				Status: item.PausedStatus,
 			})
+
+			logger.Get().Log(fmt.Sprintf("❗️ Товар\"%s\" закончился", i.Title))
 
 			api.Return409("Данный товар уже закончился", w)
 			return

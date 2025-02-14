@@ -1,11 +1,13 @@
 package item_details
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type handler struct {
@@ -39,6 +41,8 @@ func (h *handler) Handle() http.HandlerFunc {
 		if item.OldPrice != nil {
 			oldPrice = pointer.ToFloat64(float64(*item.OldPrice) / 100)
 		}
+
+		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))
 
 		api.ReturnOK(ItemDTO{
 			ID:            item.ID,

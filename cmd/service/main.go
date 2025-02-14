@@ -35,12 +35,14 @@ import (
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/service"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/transport/listener"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
+	tele "gopkg.in/telebot.v4"
 )
 
 func main() {
@@ -50,6 +52,16 @@ func main() {
 	postgres := postgres.Get(ctx)
 
 	databusClient := databus.NewClient(ctx)
+
+	telebot, err := tele.NewBot(tele.Settings{
+		Token:  os.Getenv("TELEGRAM_TOKEN"),
+		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+	})
+	if err != nil {
+		log.Printf("[error] cant init telegram bot: %v", err)
+		return
+	}
+	logger.Get().SetBot(telebot)
 
 	tinkoffClient := tinkoff.NewClient(os.Getenv("TINKOFF_API_URL"), os.Getenv("TINKOFF_PASSWORD"), os.Getenv("TINKOFF_TERMINAL_KEY"))
 
@@ -108,7 +120,7 @@ func main() {
 	})
 
 	log.Println("[info] server start up")
-	err := service.Listen(ctx, listener.NewHTTP(), mux)
+	err = service.Listen(ctx, listener.NewHTTP(), mux)
 	if err != nil {
 		log.Printf("[error] server finished with an error: %v", err)
 		return

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type handler struct {
@@ -26,6 +27,8 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		if req.Status == "CONFIRMED" {
+			logger.Get().Log("💸 Товар оплачен")
+
 			err := h.orderRepo.PaidOrder(r.Context(), req.OrderID)
 			if err != nil {
 				api.Return500("Неизвестная ошибка, попробуйте чуть позже", w)

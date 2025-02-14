@@ -12,6 +12,7 @@ import (
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type handler struct {
@@ -97,6 +98,8 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
+
+		logger.Get().Log(fmt.Sprintf("⚡️ На товар\"%s\" создали ссылку на оплату", item.Title))
 
 		api.ReturnOK(CreateOrderResponsePayload{
 			OrderID:     orderID,
