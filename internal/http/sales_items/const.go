@@ -2,8 +2,8 @@ package sales_items
 
 // Пока константным значением
 var salesItems = []int64{
-	1,
-	2,
+	27,
+	24,
 	3,
-	5,
+	1,
 }
