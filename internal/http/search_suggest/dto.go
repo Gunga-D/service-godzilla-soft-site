@@ -10,6 +10,7 @@ type SearchSuggestResponsePayload struct {
 
 type SearchSuggestDTO struct {
 	ItemID           int64    `json:"item_id"`
+	ItemCategoryID   int64    `json:"item_category_id"`
 	ItemTitle        string   `json:"item_title"`
 	ItemCurrentPrice float64  `json:"item_current_price"`
 	ItemIsForSale    bool     `json:"item_is_for_sale"`

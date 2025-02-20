@@ -54,6 +54,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			res = append(res, SearchSuggestDTO{
 				ItemID:           v.ID,
 				ItemTitle:        v.Title,
+				ItemCategoryID:   v.CategoryID,
 				ItemCurrentPrice: float64(v.CurrentPrice) / 100,
 				ItemIsForSale:    v.IsForSale,
 				ItemOldPrice:     itemOldPrice,

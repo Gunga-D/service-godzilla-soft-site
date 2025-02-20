@@ -38,6 +38,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				ID:           item.ID,
 				Title:        item.Title,
 				Platform:     item.Platform,
+				CategoryID:   item.CategoryID,
 				Region:       item.Region,
 				CurrentPrice: float64(item.CurrentPrice) / 100,
 				IsForSale:    item.IsForSale,
