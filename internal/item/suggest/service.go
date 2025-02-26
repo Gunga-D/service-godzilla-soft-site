@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 	"github.com/suggest-go/suggest/pkg/dictionary"
 	"github.com/suggest-go/suggest/pkg/metric"
 	"github.com/suggest-go/suggest/pkg/suggest"
@@ -64,6 +65,9 @@ func (s *service) sync(ctx context.Context) error {
 		}
 
 		for _, gotItem := range gotItems {
+			if _, ok := item.NotShowedItems[gotItem.ID]; ok {
+				continue
+			}
 			items = append(items, gotItem.Title)
 		}
 

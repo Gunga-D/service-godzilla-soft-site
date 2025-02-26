@@ -9,6 +9,7 @@ import (
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
+	item_info "github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 	sq "github.com/Masterminds/squirrel"
 )
 
@@ -65,6 +66,10 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 		res := make([]ItemDTO, 0, len(items))
 		for _, item := range items {
+			if _, ok := item_info.NotShowedItems[item.ID]; ok {
+				continue
+			}
+
 			var oldPrice *float64
 			if item.OldPrice != nil {
 				oldPrice = pointer.ToFloat64(float64(*item.OldPrice) / 100)
