@@ -78,7 +78,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			userEmail = email
 		}
 
-		orderID, err := h.orderCreator.CreateOrder(r.Context(), userEmail, item.CurrentPrice, item.ID, item.Slip)
+		orderID, err := h.orderCreator.CreateItemOrder(r.Context(), userEmail, item.CurrentPrice, item.ID, item.Slip)
 		if err != nil {
 			log.Printf("[error] create order: %v", err)
 

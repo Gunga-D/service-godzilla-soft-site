@@ -9,12 +9,14 @@ import (
 )
 
 type handler struct {
-	orderRepo orderRepo
+	terminalKey string
+	orderRepo   orderRepo
 }
 
-func NewHandler(orderRepo orderRepo) *handler {
+func NewHandler(terminalKey string, orderRepo orderRepo) *handler {
 	return &handler{
-		orderRepo: orderRepo,
+		terminalKey: terminalKey,
+		orderRepo:   orderRepo,
 	}
 }
 
@@ -23,6 +25,11 @@ func (h *handler) Handle() http.HandlerFunc {
 		var req PaymentNotificationRequest
 		if err := api.ReadBody(r, &req); err != nil {
 			api.Return400("Ошибка запроса, отправляемые данные некорректные", w)
+			return
+		}
+
+		if req.TerminalKey != h.terminalKey {
+			api.Return401("Ключ некорректный", w)
 			return
 		}
 
@@ -35,8 +42,8 @@ func (h *handler) Handle() http.HandlerFunc {
 				return
 			}
 		} else {
-			log.Printf("[INFO][status - %s][orderId - %s][errorCode - %s]Unsuccessful status of payment\n", req.Status, req.OrderID, req.ErrorCode)
-			if req.Status == "AUTH_FAIL" || req.Status == "REJECTED" {
+			log.Printf("[INFO][status - %s][orderId - %s][errorCode - %s] Unsuccessful status of payment\n", req.Status, req.OrderID, req.ErrorCode)
+			if req.Status == "AUTH_FAIL" || req.Status == "REJECTED" || req.Status == "DEADLINE_EXPIRED" {
 				err := h.orderRepo.FailedOrder(r.Context(), req.OrderID)
 				if err != nil {
 					api.Return500("Неизвестная ошибка, попробуйте чуть позже", w)

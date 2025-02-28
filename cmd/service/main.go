@@ -27,6 +27,8 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/recomendation_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sales_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/search_suggest"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_calc_price"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_invoice"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
@@ -110,13 +112,17 @@ func main() {
 		r1.Get("/items", fetch_items.NewHandler(itemRepo).Handle())
 		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
 
+		// Пополнение Steam
+		r1.Post("/steam_calc", steam_calc_price.NewHandler().Handle())
+		r1.Post("/steam_invoice", steam_invoice.NewHandler(orderRepo, tinkoffClient).Handle())
+
 		r1.Route("/", func(r2 chi.Router) {
 			r2.Use(mdw.NewJWT(authJWT).VerifyUser)
 			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache, databusClient).Handle())
 			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, tinkoffClient, databusClient).Handle())
 		})
 
-		r1.Post("/payment_notification", payment_notification.NewHandler(orderRepo).Handle())
+		r1.Post("/payment_notification", payment_notification.NewHandler(os.Getenv("TINKOFF_TERMINAL_KEY"), orderRepo).Handle())
 	})
 
 	log.Println("[info] server start up")

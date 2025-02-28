@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam_invoice"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
 	order_delivery "github.com/Gunga-D/service-godzilla-soft-site/internal/order/delivery"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
@@ -27,6 +28,8 @@ func main() {
 		os.Getenv("YANDEX_MAIL_LOGIN"),
 		os.Getenv("YANDEX_MAIL_PASSWORD"))
 
+	steamInvoiceClient := steam_invoice.NewClient(os.Getenv("STEAM_INVOICE_URL"), os.Getenv("STEAM_INVOICE_TOKEN"))
+
 	funcMap := template.FuncMap{
 		"nl2br": func(text string) template.HTML {
 			return template.HTML(strings.ReplaceAll(text, "\n", "<br>"))
@@ -37,7 +40,7 @@ func main() {
 		log.Fatalln("failed loading html templates")
 	}
 
-	orderDeliverySrv := order_delivery.NewService(orderRepo, yandexMailClient, dt)
+	orderDeliverySrv := order_delivery.NewService(orderRepo, steamInvoiceClient, yandexMailClient, dt)
 
 	log.Println("start order delivery worker")
 	err = orderDeliverySrv.StartOrderDelivery(ctx)

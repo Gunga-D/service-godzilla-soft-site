@@ -5,4 +5,5 @@ type PaidOrder struct {
 	Email     string `db:"email"`
 	CodeValue string `db:"code_value"`
 	ItemSlip  string `db:"item_slip"`
+	Amount    int64  `db:"amount"`
 }

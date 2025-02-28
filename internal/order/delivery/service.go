@@ -7,20 +7,23 @@ import (
 	"log"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam_invoice"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
 )
 
 type service struct {
-	orderRepo        orderRepo
-	yandexMailClient yandex_mail.Client
-	deliveryTemplate *template.Template
+	orderRepo          orderRepo
+	steamInvoiceClient steam_invoice.Client
+	yandexMailClient   yandex_mail.Client
+	deliveryTemplate   *template.Template
 }
 
-func NewService(orderRepo orderRepo, yandexMailClient yandex_mail.Client, deliveryTemplate *template.Template) *service {
+func NewService(orderRepo orderRepo, steamInvoiceClient steam_invoice.Client, yandexMailClient yandex_mail.Client, deliveryTemplate *template.Template) *service {
 	return &service{
-		orderRepo:        orderRepo,
-		yandexMailClient: yandexMailClient,
-		deliveryTemplate: deliveryTemplate,
+		orderRepo:          orderRepo,
+		steamInvoiceClient: steamInvoiceClient,
+		yandexMailClient:   yandexMailClient,
+		deliveryTemplate:   deliveryTemplate,
 	}
 }
 
@@ -51,17 +54,24 @@ func (s *service) process(ctx context.Context) error {
 	}
 
 	for _, order := range orders {
-		var body bytes.Buffer
-		err = s.deliveryTemplate.Execute(&body, order)
-		if err != nil {
-			return err
-		}
+		if order.CodeValue == "STEAM_INVOICE_BY_LOGIN" {
+			err := s.steamInvoiceClient.CreateInvoice(ctx, order.Email, order.Amount/100)
+			if err != nil {
+				return err
+			}
+		} else {
+			var body bytes.Buffer
+			err = s.deliveryTemplate.Execute(&body, order)
+			if err != nil {
+				return err
+			}
 
-		err = s.yandexMailClient.SendMail([]string{
-			order.Email,
-		}, "Доставка товара от Godzilla Soft", body.String())
-		if err != nil {
-			return err
+			err = s.yandexMailClient.SendMail([]string{
+				order.Email,
+			}, "Доставка товара от Godzilla Soft", body.String())
+			if err != nil {
+				return err
+			}
 		}
 
 		err = s.orderRepo.FinishOrder(ctx, order.ID)

@@ -21,7 +21,7 @@ func NewRepo(db postgres.TxDatabase) *repo {
 	}
 }
 
-func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string) (string, error) {
+func (r *repo) CreateItemOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string) (string, error) {
 	var orderID string
 	err := r.db.WithTx(ctx, func(ctx context.Context) error {
 		codeValue, err := r.blockCode(ctx, itemID)
@@ -40,6 +40,14 @@ func (r *repo) CreateOrder(ctx context.Context, email string, amount int64, item
 		return "", err
 	}
 	return orderID, nil
+}
+
+func (r *repo) CreateSteamOrder(ctx context.Context, steamLogin string, amount int64) (string, error) {
+	newOrderID, err := r.insertOrder(ctx, steamLogin, amount, "STEAM_INVOICE_BY_LOGIN", "Нет инструкции")
+	if err != nil {
+		return "", fmt.Errorf("insert order: %v", err)
+	}
+	return newOrderID, nil
 }
 
 func (r *repo) PaidOrder(ctx context.Context, orderID string) error {
@@ -82,7 +90,7 @@ func (r *repo) FailedOrder(ctx context.Context, orderID string) error {
 }
 
 func (r *repo) FetchPaidOrders(ctx context.Context) ([]order.PaidOrder, error) {
-	query, args, err := sq.Select("id, email, code_value, item_slip").From(`public.order`).
+	query, args, err := sq.Select("id, email, code_value, item_slip", "amount").From(`public.order`).
 		Where(sq.Eq{"status": order.PaidStatus}).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {

@@ -22,7 +22,6 @@ func NewClient(apiURL string, password string, terminalKey string) *client {
 	if apiURL == "" || password == "" || terminalKey == "" {
 		log.Fatalf("tinkoff: credentials must be non-empty")
 	}
-	fmt.Println(apiURL)
 
 	rc := resty.New()
 	rc.SetBaseURL(apiURL)
