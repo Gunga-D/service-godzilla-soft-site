@@ -31,7 +31,7 @@ func NewClient(apiURL string, token string) *client {
 func (c *client) CreateInvoice(ctx context.Context, login string, amount int64) error {
 	req := CreateInvoiceRequest{
 		SteamLogin: login,
-		Amount:     float64(amount / 100),
+		Amount:     float64(amount),
 	}
 	resp, err := c.rc.R().
 		SetContext(ctx).
