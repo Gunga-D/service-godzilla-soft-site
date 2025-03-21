@@ -11,12 +11,14 @@ import (
 )
 
 type handler struct {
-	itemGetter itemGetter
+	itemGetter   itemGetter
+	yandexGetter yandexGetter
 }
 
-func NewHandler(itemGetter itemGetter) *handler {
+func NewHandler(itemGetter itemGetter, yandexGetter yandexGetter) *handler {
 	return &handler{
-		itemGetter: itemGetter,
+		itemGetter:   itemGetter,
+		yandexGetter: yandexGetter,
 	}
 }
 
@@ -42,9 +44,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			oldPrice = pointer.ToFloat64(float64(*item.OldPrice) / 100)
 		}
 
-		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))
-
-		api.ReturnOK(ItemDTO{
+		itemDTO := ItemDTO{
 			ID:            item.ID,
 			Title:         item.Title,
 			Description:   item.Description,
@@ -59,7 +59,24 @@ func (h *handler) Handle() http.HandlerFunc {
 			OldPrice:      oldPrice,
 			ThumbnailURL:  item.ThumbnailURL,
 			BackgroundURL: item.BackgroundURL,
+			BxImageURL:    item.BxImageURL,
+			BxGalleryUrls: item.BxGalleryUrls,
 			Slip:          item.Slip,
-		}, w)
+		}
+
+		if item.YandexID != nil {
+			yaItem := h.yandexGetter.GetYandexItem(*item.YandexID)
+			if yaItem != nil {
+				yaBlock := YandexMarketDTO{
+					Rating: yaItem.Rating,
+					Price:  yaItem.Price,
+				}
+				itemDTO.YandexMarket = &yaBlock
+			}
+		}
+
+		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))
+
+		api.ReturnOK(itemDTO, w)
 	}
 }

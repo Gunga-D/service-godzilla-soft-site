@@ -18,3 +18,7 @@ type orderCreator interface {
 type userRegistrationDatabus interface {
 	PublishDatabusQuickUserRegistration(ctx context.Context, msg databus.QuickUserRegistrationDTO) error
 }
+
+type voucherActivation interface {
+	ApplyVoucher(ctx context.Context, voucherValue string, i item.Item) (int64, error)
+}

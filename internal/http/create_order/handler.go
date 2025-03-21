@@ -2,6 +2,7 @@ package create_order
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/voucher"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
@@ -20,18 +22,22 @@ type handler struct {
 	orderCreator            orderCreator
 	tinkoffClient           tinkoff.Client
 	userRegistrationDatabus userRegistrationDatabus
+	voucherActivation       voucherActivation
 }
 
 func NewHandler(itemGetter itemGetter,
 	orderCreator orderCreator,
 	tinkoffClient tinkoff.Client,
-	userRegistrationDatabus userRegistrationDatabus) *handler {
+	userRegistrationDatabus userRegistrationDatabus,
+	voucherActivation voucherActivation,
+) *handler {
 
 	return &handler{
 		itemGetter:              itemGetter,
 		orderCreator:            orderCreator,
 		tinkoffClient:           tinkoffClient,
 		userRegistrationDatabus: userRegistrationDatabus,
+		voucherActivation:       voucherActivation,
 	}
 }
 
@@ -78,7 +84,20 @@ func (h *handler) Handle() http.HandlerFunc {
 			userEmail = email
 		}
 
-		orderID, err := h.orderCreator.CreateItemOrder(r.Context(), userEmail, item.CurrentPrice, item.ID, item.Slip)
+		currentPrice := item.CurrentPrice
+		if body.Voucher != nil {
+			currentPrice, err = h.voucherActivation.ApplyVoucher(r.Context(), *body.Voucher, *item)
+			if err != nil {
+				if errors.Is(err, voucher.ErrNotFoundVoucher) {
+					api.Return404("Купон не найден или уже был активирован", w)
+					return
+				}
+				api.Return500("Непредвиденная ошибка", w)
+				return
+			}
+		}
+
+		orderID, err := h.orderCreator.CreateItemOrder(r.Context(), userEmail, currentPrice, item.ID, item.Slip)
 		if err != nil {
 			log.Printf("[error] create order: %v", err)
 
@@ -91,7 +110,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		invoiceResp, err := h.tinkoffClient.CreateInvoice(r.Context(), orderID, item.CurrentPrice, fmt.Sprintf("Покупка \"%s\"", item.Title))
+		invoiceResp, err := h.tinkoffClient.CreateInvoice(r.Context(), orderID, currentPrice, fmt.Sprintf("Покупка \"%s\"", item.Title))
 		if err != nil {
 			log.Printf("[error] cannot create invoice: %v", err)
 
