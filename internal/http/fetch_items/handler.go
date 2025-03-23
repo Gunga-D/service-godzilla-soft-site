@@ -89,6 +89,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				IsForSale:    item.IsForSale,
 				OldPrice:     oldPrice,
 				ThumbnailURL: item.ThumbnailURL,
+				IsSteamGift:  item.IsSteamGift,
 			})
 		}
 		api.ReturnOK(res, w)
