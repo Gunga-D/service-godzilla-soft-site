@@ -42,6 +42,15 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
+		if i.IsSteamGift {
+			api.ReturnOK(CartItemResponsePayload{
+				Type:     "gift",
+				Price:    float64(i.CurrentPrice) / 100,
+				Currency: "RUB",
+			}, w)
+			return
+		}
+
 		hasCodes, err := h.codeRepo.HasActiveCode(r.Context(), i.ID)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
@@ -60,6 +69,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		api.ReturnOK(CartItemResponsePayload{
+			Type:     "cdkey",
 			Price:    float64(i.CurrentPrice) / 100,
 			Currency: "RUB",
 		}, w)

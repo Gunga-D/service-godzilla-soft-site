@@ -42,6 +42,14 @@ func (r *repo) CreateItemOrder(ctx context.Context, email string, amount int64, 
 	return orderID, nil
 }
 
+func (r *repo) CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64) (string, error) {
+	newOrderID, err := r.insertOrder(ctx, steamProfile, amount, fmt.Sprintf("STEAM_GIFT_%d", itemID), "Нет инструкции")
+	if err != nil {
+		return "", fmt.Errorf("insert order: %v", err)
+	}
+	return newOrderID, nil
+}
+
 func (r *repo) CreateSteamOrder(ctx context.Context, steamLogin string, amount int64) (string, error) {
 	newOrderID, err := r.insertOrder(ctx, steamLogin, amount, "STEAM_INVOICE_BY_LOGIN", "Нет инструкции")
 	if err != nil {

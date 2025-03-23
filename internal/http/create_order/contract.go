@@ -8,11 +8,12 @@ import (
 )
 
 type itemGetter interface {
-	GetItemByID(ctx context.Context, id int64) (*item.Item, error)
+	GetItemByID(ctx context.Context, id int64) (*item.ItemCache, error)
 }
 
 type orderCreator interface {
 	CreateItemOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string) (string, error)
+	CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64) (string, error)
 }
 
 type userRegistrationDatabus interface {

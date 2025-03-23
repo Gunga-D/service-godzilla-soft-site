@@ -16,5 +16,6 @@ type SearchSuggestDTO struct {
 	ItemIsForSale    bool     `json:"item_is_for_sale"`
 	ItemOldPrice     *float64 `json:"item_old_price"`
 	ItemThumbnailURL string   `json:"item_thumbnail_url"`
+	ItemIsSteamGift  bool     `json:"item_is_steam_gift"`
 	Probability      float64  `json:"probability"`
 }

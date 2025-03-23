@@ -12,5 +12,5 @@ type suggester interface {
 }
 
 type itemGetter interface {
-	GetItemByName(ctx context.Context, name string) (*item.Item, error)
+	GetItemByName(ctx context.Context, name string) (*item.ItemCache, error)
 }

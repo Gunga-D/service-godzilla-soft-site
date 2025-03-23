@@ -8,17 +8,30 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam_invoice"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
 	order_delivery "github.com/Gunga-D/service-godzilla-soft-site/internal/order/delivery"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
+	tele "gopkg.in/telebot.v4"
 )
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	telebot, err := tele.NewBot(tele.Settings{
+		Token:  os.Getenv("GIFTS_TELEGRAM_TOKEN"),
+		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+	})
+	if err != nil {
+		log.Printf("[error] cant init telegram bot: %v", err)
+		return
+	}
+	logger.Get().SetBot(telebot)
 
 	postgres := postgres.Get(ctx)
 

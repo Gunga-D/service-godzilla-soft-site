@@ -3,12 +3,15 @@ package delivery
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"html/template"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam_invoice"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type service struct {
@@ -60,17 +63,24 @@ func (s *service) process(ctx context.Context) error {
 				return err
 			}
 		} else {
-			var body bytes.Buffer
-			err = s.deliveryTemplate.Execute(&body, order)
-			if err != nil {
-				return err
-			}
+			if strings.Contains(order.CodeValue, "STEAM_GIFT") {
+				err = logger.Get().Send(-1002576178685, fmt.Sprintf("Необходимо отправить гифт, пользователю %s в течение 15 минут, код гифта - %s", order.Email, order.CodeValue))
+				if err != nil {
+					return err
+				}
+			} else {
+				var body bytes.Buffer
+				err = s.deliveryTemplate.Execute(&body, order)
+				if err != nil {
+					return err
+				}
 
-			err = s.yandexMailClient.SendMail([]string{
-				order.Email,
-			}, "Доставка товара от Godzilla Soft", body.String())
-			if err != nil {
-				return err
+				err = s.yandexMailClient.SendMail([]string{
+					order.Email,
+				}, "Доставка товара от Godzilla Soft", body.String())
+				if err != nil {
+					return err
+				}
 			}
 		}
 

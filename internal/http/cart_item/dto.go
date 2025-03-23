@@ -5,6 +5,7 @@ type CartItemRequest struct {
 }
 
 type CartItemResponsePayload struct {
+	Type     string  `json:"type"`
 	Price    float64 `json:"price"`
 	Currency string  `json:"currency"`
 }

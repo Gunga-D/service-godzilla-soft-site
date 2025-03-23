@@ -29,3 +29,10 @@ func (l *logger) Log(msg string) {
 		ID: -1002372045234,
 	}, msg)
 }
+
+func (l *logger) Send(id int64, msg string) error {
+	_, err := l.telebot.Send(&tele.Chat{
+		ID: id,
+	}, msg)
+	return err
+}

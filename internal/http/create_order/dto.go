@@ -1,9 +1,10 @@
 package create_order
 
 type CreateOrderRequest struct {
-	Email   *string `json:"email"`
-	Voucher *string `json:"voucher"`
-	ItemID  int64   `json:"item_id"`
+	Email        *string `json:"email"`
+	SteamProfile *string `json:"steam_profile"`
+	Voucher      *string `json:"voucher"`
+	ItemID       int64   `json:"item_id"`
 }
 
 type CreateOrderResponsePayload struct {

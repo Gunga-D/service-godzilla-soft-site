@@ -60,6 +60,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				ItemOldPrice:     itemOldPrice,
 				ItemThumbnailURL: v.ThumbnailURL,
 				Probability:      item.Probability,
+				ItemIsSteamGift:  v.IsSteamGift,
 			})
 		}
 		api.ReturnOK(SearchSuggestResponsePayload{

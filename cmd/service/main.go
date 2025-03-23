@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_market"
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
@@ -31,13 +32,16 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sales_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/search_suggest"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_calc_price"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_gift_resolve_profile"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_invoice"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers"
+	steam_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/steam"
+	yandex_market_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/yandex_market"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/suggest"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/yandex_market_filler"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
@@ -71,6 +75,7 @@ func main() {
 	}
 	logger.Get().SetBot(telebot)
 
+	steamClient := steam.NewClient(os.Getenv("STEAM_KEY"))
 	tinkoffClient := tinkoff.NewClient(os.Getenv("TINKOFF_API_URL"), os.Getenv("TINKOFF_PASSWORD"), os.Getenv("TINKOFF_TERMINAL_KEY"))
 	yaMarketBusinessID, err := strconv.Atoi(os.Getenv("YA_MARKET_BUSINESS_ID"))
 	if err != nil {
@@ -80,12 +85,13 @@ func main() {
 	yaMarket := yandex_market.NewClient(os.Getenv("YA_MARKET_API_URL"), os.Getenv("YA_MARKET_AUTH"), int64(yaMarketBusinessID))
 
 	itemRepo := item_postgres.NewRepo(postgres)
-	itemCache := item_cache.NewCache(itemRepo)
+	itemCache := item_cache.NewCache(itemRepo, []fillers.Filler{
+		yandex_market_filler.NewFiller(yaMarket),
+		steam_filler.NewFiller(steamClient),
+	})
 	go itemCache.StartSync(ctx)
 	itemSuggestSrv := suggest.NewService(itemRepo)
 	go itemSuggestSrv.StartSync(ctx)
-	itemYandexMarketFiller := yandex_market_filler.NewService(itemRepo, yaMarket)
-	go itemYandexMarketFiller.StartFetching(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres)
 	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
@@ -126,7 +132,7 @@ func main() {
 		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())
 		r1.Get("/new_items", new_items.NewHandler(itemCache).Handle())
 		r1.Get("/items", fetch_items.NewHandler(itemRepo).Handle())
-		r1.Get("/item_details", item_details.NewHandler(itemCache, itemYandexMarketFiller).Handle())
+		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
 
 		// Пополнение Steam
 		r1.Post("/steam_calc", steam_calc_price.NewHandler().Handle())
@@ -137,6 +143,10 @@ func main() {
 			r2.Post("/check_voucher", check_voucher.NewHandler(itemCache, voucherActivation).Handle())
 			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache, databusClient).Handle())
 			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, tinkoffClient, databusClient, voucherActivation).Handle())
+		})
+
+		r1.Route("/steam_gift", func(r2 chi.Router) {
+			r2.Post("/resolve_profile", steam_gift_resolve_profile.NewHandler(steamClient).Handle())
 		})
 
 		r1.Post("/payment_notification", payment_notification.NewHandler(os.Getenv("TINKOFF_TERMINAL_KEY"), orderRepo).Handle())

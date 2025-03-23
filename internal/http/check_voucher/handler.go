@@ -41,7 +41,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		newPrice, hasLimitation, err := h.voucherActivation.PeekVoucher(r.Context(), body.Voucher, *i)
+		newPrice, hasLimitation, err := h.voucherActivation.PeekVoucher(r.Context(), body.Voucher, i.Item)
 		if err != nil {
 			if errors.Is(err, voucher.ErrNotFoundVoucher) {
 				api.Return404("Купон не найден или уже был активирован", w)

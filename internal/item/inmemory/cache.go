@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers"
 )
 
 const (
@@ -15,18 +16,20 @@ const (
 )
 
 type cache struct {
-	itemsByID  map[int64]item.Item
-	itemByName map[string]item.Item
+	itemsByID  map[int64]item.ItemCache
+	itemByName map[string]item.ItemCache
+	fillers    []fillers.Filler
 	getter     getter
 	lock       *sync.RWMutex
 }
 
-func NewCache(getter getter) *cache {
+func NewCache(getter getter, fillers []fillers.Filler) *cache {
 	return &cache{
-		itemsByID:  make(map[int64]item.Item),
-		itemByName: make(map[string]item.Item),
+		itemsByID:  make(map[int64]item.ItemCache),
+		itemByName: make(map[string]item.ItemCache),
 		getter:     getter,
 		lock:       &sync.RWMutex{},
+		fillers:    fillers,
 	}
 }
 
@@ -42,7 +45,7 @@ func (c *cache) StartSync(ctx context.Context) {
 		log.Fatalf("[error] failed to sync items: %v\n", err)
 	}
 
-	t := time.NewTicker(5 * time.Minute)
+	t := time.NewTicker(60 * time.Minute)
 	for {
 		select {
 		case <-ctx.Done():
@@ -62,17 +65,31 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 	}(time.Now())
 
 	cursor := int64(0)
-	newItemsByID := make(map[int64]item.Item)
-	newItemsByName := make(map[string]item.Item)
+	newItemsByID := make(map[int64]item.ItemCache)
+	newItemsByName := make(map[string]item.ItemCache)
 	for {
 		gotItems, err := c.getter.FetchItemsPaginatedCursorItemId(ctx, limit, cursor)
 		if err != nil {
 			return fmt.Errorf("failed to fetch items: %v", err)
 		}
 
+		cacheItems := make([]item.ItemCache, 0, len(gotItems))
 		for _, gotItem := range gotItems {
-			newItemsByID[gotItem.ID] = gotItem
-			newItemsByName[gotItem.Title] = gotItem
+			cacheItems = append(cacheItems, item.ItemCache{
+				Item: gotItem,
+			})
+		}
+
+		for _, f := range c.fillers {
+			err = f.Fill(ctx, cacheItems)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, i := range cacheItems {
+			newItemsByID[i.ID] = i
+			newItemsByName[i.Title] = i
 		}
 
 		if len(gotItems) < int(limit) {
@@ -88,7 +105,7 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 	return nil
 }
 
-func (c *cache) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
+func (c *cache) GetItemByID(ctx context.Context, id int64) (*item.ItemCache, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -99,7 +116,7 @@ func (c *cache) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
 	return &res, nil
 }
 
-func (c *cache) GetItemByName(ctx context.Context, name string) (*item.Item, error) {
+func (c *cache) GetItemByName(ctx context.Context, name string) (*item.ItemCache, error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 

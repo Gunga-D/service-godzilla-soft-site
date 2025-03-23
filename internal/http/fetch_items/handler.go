@@ -8,16 +8,15 @@ import (
 
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 	item_info "github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 	sq "github.com/Masterminds/squirrel"
 )
 
 type handler struct {
-	itemRepo item.ReadRepository
+	itemRepo item_info.ReadRepository
 }
 
-func NewHandler(itemRepo item.ReadRepository) *handler {
+func NewHandler(itemRepo item_info.ReadRepository) *handler {
 	return &handler{
 		itemRepo: itemRepo,
 	}
@@ -35,7 +34,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		criteries := sq.And{
-			sq.Eq{"status": item.ActiveStatus},
+			sq.Eq{"status": item_info.ActiveStatus},
 		}
 		if v, err := strconv.ParseFloat(r.URL.Query().Get("min_price"), 64); err == nil {
 			criteries = append(criteries, sq.GtOrEq{"current_price": int64(v * 100)})
@@ -45,6 +44,11 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 		if v, err := strconv.ParseInt(r.URL.Query().Get("category_id"), 10, 64); err == nil {
 			criteries = append(criteries, sq.Eq{"category_id": v})
+		}
+		if r.URL.Query().Get("steam_gift") == "true" {
+			criteries = append(criteries, sq.Eq{"is_steam_gift": true})
+		} else {
+			criteries = append(criteries, sq.Eq{"is_steam_gift": false})
 		}
 		if v := r.URL.Query().Get("region"); v != "" {
 			decodedV, err := url.QueryUnescape(v)
