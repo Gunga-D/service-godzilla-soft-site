@@ -18,11 +18,7 @@ func NewHandler(cache itemsCache) *handler {
 
 func (h *handler) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := h.cache.WarmUp(r.Context())
-		if err != nil {
-			api.Return500(err.Error(), w)
-			return
-		}
+		go h.cache.WarmUp(r.Context())
 
 		api.ReturnOK(nil, w)
 	}

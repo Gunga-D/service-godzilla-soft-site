@@ -43,6 +43,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				CurrentPrice: float64(item.CurrentPrice) / 100,
 				IsForSale:    item.IsForSale,
 				OldPrice:     oldPrice,
+				IsSteamGift:  item.IsSteamGift,
 				ThumbnailURL: item.ThumbnailURL,
 			})
 		}

@@ -33,11 +33,10 @@ func NewCache(getter getter, fillers []fillers.Filler) *cache {
 	}
 }
 
-func (c *cache) WarmUp(ctx context.Context) error {
+func (c *cache) WarmUp(ctx context.Context) {
 	if err := c.sync(ctx, _itemsPerRequestLimit); err != nil {
-		return err
+		log.Printf("error to warmup cache: %v\n", err)
 	}
-	return nil
 }
 
 func (c *cache) StartSync(ctx context.Context) {
