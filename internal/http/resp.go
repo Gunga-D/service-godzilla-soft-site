@@ -23,7 +23,7 @@ func ReturnOK(payload interface{}, w http.ResponseWriter) {
 		Data:   payload,
 	})
 	if err != nil {
-		log.Printf("encode error: %v\n", err)
+		log.Printf("resp encode error: %v\n", err)
 	}
 }
 
