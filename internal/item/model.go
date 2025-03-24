@@ -35,8 +35,9 @@ type Item struct {
 }
 
 type ItemYandexMarketBlock struct {
-	Price  float64
-	Rating float64
+	Price        float64
+	ReviewsCount int
+	Rating       float64
 }
 
 type ItemSteamBlock struct {

@@ -70,11 +70,20 @@ func (f *filler) Fill(ctx context.Context, items []item.ItemCache) error {
 		v := items[idx]
 		if v.YandexID != nil {
 			modelID := mapSkuModelID[*v.YandexID]
-			rating := sumRating[modelID] / float64(countRating[modelID])
-
+			var rating float64
+			var reviewsCount int
+			sum, ok := sumRating[modelID]
+			if ok {
+				count, ok := countRating[modelID]
+				reviewsCount = count
+				if ok {
+					rating = sum / float64(count)
+				}
+			}
 			items[idx].YandexMarket = &item.ItemYandexMarketBlock{
-				Price:  prices[*v.YandexID],
-				Rating: rating,
+				Price:        prices[*v.YandexID],
+				ReviewsCount: reviewsCount,
+				Rating:       Round(rating, 1),
 			}
 		}
 	}

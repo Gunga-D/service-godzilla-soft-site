@@ -37,6 +37,7 @@ type SteamRequirementsDTO struct {
 }
 
 type YandexMarketDTO struct {
-	Rating float64 `json:"rating"`
-	Price  float64 `json:"price"`
+	Rating       float64 `json:"rating"`
+	Price        float64 `json:"price"`
+	ReviewsCount int     `json:"reviews_count"`
 }
