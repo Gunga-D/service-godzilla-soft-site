@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/AlekSi/pointer"
@@ -17,10 +18,13 @@ func ReturnOK(payload interface{}, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(response{
+	err := json.NewEncoder(w).Encode(response{
 		Status: "ok",
 		Data:   payload,
 	})
+	if err != nil {
+		log.Printf("encode error: %v\n", err)
+	}
 }
 
 func Return400(msg string, w http.ResponseWriter) {
