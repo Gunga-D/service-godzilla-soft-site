@@ -38,7 +38,7 @@ var popularKupikodSettings = map[string]string{
 	"popular":             "1",
 	"order":               "ASC",
 	"is_dlc":              "0",
-	"per_page":            "50",
+	"per_page":            "150",
 	"page":                "1",
 	"amount_games_weekly": "true",
 }
@@ -88,6 +88,7 @@ func main() {
 		selfItems = append(selfItems, item.Item{
 			Title:        kupikodItem.Name,
 			SteamAppID:   &steamAppID,
+			ThumbnailURL: appDetails.HeaderImage,
 			CategoryID:   10001,
 			Platform:     "Steam",
 			Region:       "РФ",
