@@ -51,8 +51,8 @@ func (f *filler) Fill(ctx context.Context, items []item.ItemCache) error {
 		ModelIds: modelIds,
 	})
 	if err != nil {
-		log.Printf("[error] cannot get goods feedback: %v\n", err)
-		return err
+		log.Printf("[error] cannot get goods feedback for %v: %v\n", modelIds, err)
+		return nil
 	}
 	for _, f := range goodsFeedback.Result.Feedbacks {
 		sumRating[f.Identifiers.ModelID] += float64(f.Statistics.Rating)
