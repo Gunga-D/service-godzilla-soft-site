@@ -79,6 +79,11 @@ func (h *handler) Handle() http.HandlerFunc {
 				oldPrice = pointer.ToFloat64(float64(*item.OldPrice) / 100)
 			}
 
+			itemType := "cdkey"
+			if item.IsSteamGift {
+				itemType = "gift"
+			}
+
 			res = append(res, ItemDTO{
 				ID:           item.ID,
 				Title:        item.Title,
@@ -89,7 +94,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				IsForSale:    item.IsForSale,
 				OldPrice:     oldPrice,
 				ThumbnailURL: item.ThumbnailURL,
-				IsSteamGift:  item.IsSteamGift,
+				Type:         itemType,
 			})
 		}
 		api.ReturnOK(res, w)

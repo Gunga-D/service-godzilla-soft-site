@@ -51,6 +51,10 @@ func (h *handler) Handle() http.HandlerFunc {
 				itemOldPrice = pointer.ToFloat64(float64(*v.OldPrice) / 100)
 			}
 
+			itemType := "cdkey"
+			if v.IsSteamGift {
+				itemType = "gift"
+			}
 			res = append(res, SearchSuggestDTO{
 				ItemID:           v.ID,
 				ItemTitle:        v.Title,
@@ -60,7 +64,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				ItemOldPrice:     itemOldPrice,
 				ItemThumbnailURL: v.ThumbnailURL,
 				Probability:      item.Probability,
-				ItemIsSteamGift:  v.IsSteamGift,
+				ItemType:         itemType,
 			})
 		}
 		api.ReturnOK(SearchSuggestResponsePayload{

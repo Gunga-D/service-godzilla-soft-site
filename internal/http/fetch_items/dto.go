@@ -10,5 +10,5 @@ type ItemDTO struct {
 	IsForSale    bool     `json:"is_for_sale"`
 	OldPrice     *float64 `json:"old_price"`
 	ThumbnailURL string   `json:"thumbnail_url"`
-	IsSteamGift  bool     `json:"is_steam_gift"`
+	Type         string   `json:"type"`
 }
