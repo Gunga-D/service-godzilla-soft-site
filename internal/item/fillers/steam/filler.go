@@ -69,14 +69,6 @@ func (f *filler) Fill(ctx context.Context, items []item.ItemCache) error {
 					Minimum:     res.PcRequirements.Minimum,
 					Recommended: res.PcRequirements.Recommended,
 				},
-				MacRequirements: item.SteamRequirements{
-					Minimum:     res.MacRequirements.Minimum,
-					Recommended: res.MacRequirements.Recommended,
-				},
-				LinuxRequirements: item.SteamRequirements{
-					Minimum:     res.LinuxRequirements.Minimum,
-					Recommended: res.LinuxRequirements.Recommended,
-				},
 				Developers: res.Developers,
 				Publishers: res.Publishers,
 				Platforms: item.SteamPlatforms{

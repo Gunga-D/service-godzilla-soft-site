@@ -48,14 +48,6 @@ type AppDetails struct {
 		Minimum     *string `json:"minimum,omitempty"`
 		Recommended *string `json:"recommended,omitempty"`
 	} `json:"pc_requirements"`
-	MacRequirements struct {
-		Minimum     *string `json:"minimum,omitempty"`
-		Recommended *string `json:"recommended,omitempty"`
-	} `json:"mac_requirements"`
-	LinuxRequirements struct {
-		Minimum     *string `json:"minimum,omitempty"`
-		Recommended *string `json:"recommended,omitempty"`
-	} `json:"linux_requirements"`
 	Developers    []string `json:"developers"`
 	Publishers    []string `json:"publishers"`
 	PriceOverview struct {

@@ -47,8 +47,6 @@ type ItemSteamBlock struct {
 	CapsuleImage        string
 	CapsuleImagev5      string
 	PcRequirements      SteamRequirements
-	MacRequirements     SteamRequirements
-	LinuxRequirements   SteamRequirements
 	Developers          []string
 	Publishers          []string
 	Platforms           SteamPlatforms

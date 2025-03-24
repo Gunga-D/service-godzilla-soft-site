@@ -97,20 +97,10 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		var pcRequirements *SteamRequirementsDTO
-		var macRequirements *SteamRequirementsDTO
-		var linuxRequirements *SteamRequirementsDTO
 		if item.SteamBlock != nil {
 			pcRequirements = &SteamRequirementsDTO{
 				Minimum:     item.SteamBlock.PcRequirements.Minimum,
 				Recommended: item.SteamBlock.PcRequirements.Recommended,
-			}
-			macRequirements = &SteamRequirementsDTO{
-				Minimum:     item.SteamBlock.MacRequirements.Minimum,
-				Recommended: item.SteamBlock.MacRequirements.Recommended,
-			}
-			linuxRequirements = &SteamRequirementsDTO{
-				Minimum:     item.SteamBlock.LinuxRequirements.Minimum,
-				Recommended: item.SteamBlock.LinuxRequirements.Recommended,
 			}
 		}
 
@@ -130,30 +120,28 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		itemDTO := ItemDTO{
-			ID:                item.ID,
-			Title:             item.Title,
-			Type:              itemType,
-			Description:       desc,
-			CategoryID:        item.CategoryID,
-			Platform:          item.Platform,
-			Region:            item.Region,
-			Publisher:         publisher,
-			Creator:           creator,
-			ReleaseDate:       releaseDate,
-			CurrentPrice:      float64(item.CurrentPrice) / 100,
-			IsForSale:         item.IsForSale,
-			OldPrice:          oldPrice,
-			ThumbnailURL:      item.ThumbnailURL,
-			BackgroundURL:     backgroundURl,
-			BxImageURL:        bxImageURL,
-			BxGalleryUrls:     bxGalleryUrls,
-			BxMovies:          bxMovies,
-			Slip:              item.Slip,
-			YandexMarket:      yandexMarketBlock,
-			Genres:            genres,
-			PcRequirements:    pcRequirements,
-			MacRequirements:   macRequirements,
-			LinuxRequirements: linuxRequirements,
+			ID:             item.ID,
+			Title:          item.Title,
+			Type:           itemType,
+			Description:    desc,
+			CategoryID:     item.CategoryID,
+			Platform:       item.Platform,
+			Region:         item.Region,
+			Publisher:      publisher,
+			Creator:        creator,
+			ReleaseDate:    releaseDate,
+			CurrentPrice:   float64(item.CurrentPrice) / 100,
+			IsForSale:      item.IsForSale,
+			OldPrice:       oldPrice,
+			ThumbnailURL:   item.ThumbnailURL,
+			BackgroundURL:  backgroundURl,
+			BxImageURL:     bxImageURL,
+			BxGalleryUrls:  bxGalleryUrls,
+			BxMovies:       bxMovies,
+			Slip:           item.Slip,
+			YandexMarket:   yandexMarketBlock,
+			Genres:         genres,
+			PcRequirements: pcRequirements,
 		}
 
 		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -15,18 +16,38 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
+var unavailableKupikodSettings = map[string]string{
+	"unavailable":         "1",
+	"amount_games_weekly": "true",
+	"is_dlc":              "0",
+	"with_totals":         "false",
+	"per_page":            "150",
+	"page":                "0",
+}
+
+var newsKupikodSettings = map[string]string{
+	"new":               "1",
+	"is_dlc":            "0",
+	"sold_games_weekly": "true",
+	"with_totals":       "true",
+	"per_page":          "50",
+	"page":              "0",
+}
+
+var popularKupikodSettings = map[string]string{
+	"popular":             "1",
+	"order":               "ASC",
+	"is_dlc":              "0",
+	"per_page":            "50",
+	"page":                "1",
+	"amount_games_weekly": "true",
+}
+
 func main() {
 	postgres := postgres.Get(context.Background())
 
 	kupikodClient := kupikod.NewClient()
-	resp, err := kupikodClient.FetchGames(context.Background(), map[string]string{
-		"unavailable":         "1",
-		"amount_games_weekly": "true",
-		"is_dlc":              "0",
-		"with_totals":         "false",
-		"per_page":            "80",
-		"page":                "3",
-	})
+	resp, err := kupikodClient.FetchGames(context.Background(), popularKupikodSettings)
 	if err != nil {
 		log.Fatalf("error to get games from kupikod: %v", err)
 	}
@@ -50,11 +71,13 @@ func main() {
 	for _, kupikodItem := range resp.Data {
 		steamAppID, err := strconv.ParseInt(kupikodItem.ExternalID, 10, 64)
 		if err != nil {
+			fmt.Printf("%s: error to get steam app id: %v", kupikodItem.Name, err)
 			continue
 		}
 
 		appDetails, err := steamClient.AppDetails(context.Background(), steamAppID)
 		if err != nil {
+			fmt.Printf("%s: error to get app details: %v", kupikodItem.Name, err)
 			continue
 		}
 
