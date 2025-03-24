@@ -48,5 +48,8 @@ type GoodsFeedbackResponse struct {
 				Rating int `json:"rating"`
 			} `json:"statistics"`
 		} `json:"feedbacks"`
+		Paging struct {
+			NextPageToken *string `json:"nextPageToken,omitempty"`
+		} `json:"paging"`
 	} `json:"result"`
 }

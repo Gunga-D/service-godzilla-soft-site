@@ -47,16 +47,23 @@ func (f *filler) Fill(ctx context.Context, items []item.ItemCache) error {
 
 	sumRating := make(map[int64]float64)
 	countRating := make(map[int64]int)
-	goodsFeedback, err := f.yandexMarket.GoodsFeedback(ctx, yandex_market.GoodsFeedbackRequest{
-		ModelIds: modelIds,
-	})
-	if err != nil {
-		log.Printf("[error] cannot get goods feedback for %v: %v\n", modelIds, err)
-		return nil
-	}
-	for _, f := range goodsFeedback.Result.Feedbacks {
-		sumRating[f.Identifiers.ModelID] += float64(f.Statistics.Rating)
-		countRating[f.Identifiers.ModelID]++
+	var nextPageToken *string
+	for {
+		goodsFeedback, err := f.yandexMarket.GoodsFeedback(ctx, yandex_market.GoodsFeedbackRequest{
+			ModelIds: modelIds,
+		}, nextPageToken)
+		if err != nil {
+			log.Printf("[error] cannot get goods feedback for %v: %v\n", modelIds, err)
+			return nil
+		}
+		for _, f := range goodsFeedback.Result.Feedbacks {
+			sumRating[f.Identifiers.ModelID] += float64(f.Statistics.Rating)
+			countRating[f.Identifiers.ModelID]++
+		}
+		nextPageToken = goodsFeedback.Result.Paging.NextPageToken
+		if nextPageToken == nil {
+			break
+		}
 	}
 
 	for idx := 0; idx < len(items); idx++ {

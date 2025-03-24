@@ -46,13 +46,17 @@ func (c *client) OfferMappings(ctx context.Context, req OfferMappingsRequest) (*
 	return resp.Result().(*OfferMappingsResponse), nil
 }
 
-func (c *client) GoodsFeedback(ctx context.Context, req GoodsFeedbackRequest) (*GoodsFeedbackResponse, error) {
+func (c *client) GoodsFeedback(ctx context.Context, req GoodsFeedbackRequest, pageToken *string) (*GoodsFeedbackResponse, error) {
+	url := fmt.Sprintf("/businesses/%d/goods-feedback?limit=50", c.businessID)
+	if pageToken != nil {
+		url += fmt.Sprintf("&page_token=%s", *pageToken)
+	}
 	resp, err := c.rc.R().
 		SetContext(ctx).
 		SetHeader("Content-Type", "application/json").
 		SetBody(req).
 		SetResult(GoodsFeedbackResponse{}).
-		Post(fmt.Sprintf("/businesses/%d/goods-feedback?limit=300", c.businessID))
+		Post(url)
 	if err != nil {
 		return nil, err
 	}
