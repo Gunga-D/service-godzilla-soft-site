@@ -2,6 +2,7 @@ package item_details
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -37,6 +38,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return404("Такого товара нет в наличии", w)
 			return
 		}
+		log.Printf("Item details - %v\n", *item)
 
 		var oldPrice *float64
 		if item.OldPrice != nil {

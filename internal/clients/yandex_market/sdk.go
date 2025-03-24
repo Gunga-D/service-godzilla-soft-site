@@ -52,7 +52,7 @@ func (c *client) GoodsFeedback(ctx context.Context, req GoodsFeedbackRequest) (*
 		SetHeader("Content-Type", "application/json").
 		SetBody(req).
 		SetResult(GoodsFeedbackResponse{}).
-		Post(fmt.Sprintf("/businesses/%d/goods-feedback?limit=50", c.businessID))
+		Post(fmt.Sprintf("/businesses/%d/goods-feedback?limit=300", c.businessID))
 	if err != nil {
 		return nil, err
 	}
