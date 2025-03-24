@@ -2,6 +2,7 @@ package steam
 
 import (
 	"context"
+	"log"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
@@ -23,7 +24,8 @@ func (f *filler) Fill(ctx context.Context, items []item.ItemCache) error {
 		if v.SteamAppID != nil {
 			res, err := f.steamClient.AppDetails(ctx, *v.SteamAppID)
 			if err != nil {
-				return err
+				log.Printf("cannot get app details of %d: %v", *v.SteamAppID, err)
+				continue
 			}
 
 			screenshots := make([]item.SteamScreenshot, 0, len(res.Screenshots))
