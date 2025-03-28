@@ -8,3 +8,11 @@ var popularItems = []int64{
 	36,
 	11,
 }
+
+var popularMAVItems = []int64{
+	306,
+	305,
+	297,
+	220,
+	303,
+}

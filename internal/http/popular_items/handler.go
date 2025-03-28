@@ -5,6 +5,7 @@ import (
 
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/platform"
 )
 
 type handler struct {
@@ -19,8 +20,18 @@ func NewHandler(itemGetter itemGetter) *handler {
 
 func (h *handler) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := make([]ItemDTO, 0, len(popularItems))
-		for _, iID := range popularItems {
+		items := popularItems
+
+		pltRaw := r.Context().Value(platform.MetaPlatform{})
+		if pltRaw != nil {
+			plt := pltRaw.(string)
+			if plt == platform.MAV {
+				items = popularMAVItems
+			}
+		}
+
+		res := make([]ItemDTO, 0, len(items))
+		for _, iID := range items {
 			item, err := h.itemGetter.GetItemByID(r.Context(), iID)
 			if err != nil {
 				api.Return500("Неизвестная ошибка", w)

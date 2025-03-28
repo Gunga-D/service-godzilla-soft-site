@@ -114,6 +114,8 @@ func main() {
 	mux.Use(c.Handler)
 
 	mux.Route("/v1", func(r1 chi.Router) {
+		r1.Use(mdw.NewUseragent().IdentifyPlatform)
+
 		r1.Route("/admin", func(r2 chi.Router) {
 			r2.Use(mdw.NewBearerMDW(os.Getenv("ADMIN_SECRET_KEY")).VerifyUser)
 			r2.Post("/warmup_items", admin_warmup_items.NewHandler(itemCache).Handle())
@@ -127,6 +129,7 @@ func main() {
 		r1.Post("/search_suggest", search_suggest.NewHandler(itemSuggestSrv, itemCache).Handle())
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
+
 		r1.Get("/popular_items", popular_items.NewHandler(itemCache).Handle())
 		r1.Get("/recomendation_items", recomendation_items.NewHandler(itemCache).Handle())
 		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())
