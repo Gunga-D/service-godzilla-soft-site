@@ -15,4 +15,6 @@ var popularMAVItems = []int64{
 	297,
 	220,
 	303,
+	290,
+	268,
 }
