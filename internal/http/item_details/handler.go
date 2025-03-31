@@ -3,6 +3,7 @@ package item_details
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -58,9 +59,13 @@ func (h *handler) Handle() http.HandlerFunc {
 		var bxMovies []MovieDTO
 		if item.SteamBlock != nil {
 			for _, v := range item.SteamBlock.Movies {
+				videoNorm, err := toHTTPS(v.MP4.Res480)
+				if err != nil {
+					continue
+				}
 				bxMovies = append(bxMovies, MovieDTO{
 					Poster: v.Thumbnail,
-					Video:  v.MP4.Res480,
+					Video:  videoNorm,
 				})
 			}
 		}
@@ -150,4 +155,13 @@ func (h *handler) Handle() http.HandlerFunc {
 
 		api.ReturnOK(itemDTO, w)
 	}
+}
+
+func toHTTPS(addr string) (string, error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return "", err
+	}
+	u.Scheme = "https"
+	return u.String(), nil
 }
