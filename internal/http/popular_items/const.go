@@ -6,6 +6,7 @@ var popularItems = []int64{
 	306,
 	305,
 	297,
+	308,
 	290,
 }
 
@@ -17,4 +18,5 @@ var popularMAVItems = []int64{
 	303,
 	290,
 	268,
+	308,
 }
