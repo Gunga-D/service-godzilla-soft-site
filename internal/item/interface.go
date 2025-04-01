@@ -11,5 +11,5 @@ type WriteRepository interface {
 }
 
 type ReadRepository interface {
-	FetchItemsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64) ([]Item, error)
+	FetchItemsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64, hasRandomOrder bool) ([]Item, error)
 }

@@ -33,6 +33,11 @@ func (h *handler) Handle() http.HandlerFunc {
 			offset = 0
 		}
 
+		hasRandomOrder := false
+		if r.URL.Query().Get("random") == "1" {
+			hasRandomOrder = true
+		}
+
 		criteries := sq.And{
 			sq.Eq{"status": item_info.ActiveStatus},
 		}
@@ -63,7 +68,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			criteries = append(criteries, sq.Eq{"platform": v})
 		}
 
-		items, err := h.itemRepo.FetchItemsByFilter(r.Context(), criteries, limit, offset)
+		items, err := h.itemRepo.FetchItemsByFilter(r.Context(), criteries, limit, offset, hasRandomOrder)
 		if err != nil {
 			api.Return500("Ошибка получения каталога", w)
 			return
