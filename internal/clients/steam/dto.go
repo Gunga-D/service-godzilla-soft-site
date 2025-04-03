@@ -96,3 +96,15 @@ type AppDetails struct {
 	} `json:"release_date"`
 	Background string `json:"background"`
 }
+
+type GenreList struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Tabs struct {
+		TopSellers struct {
+			Items []struct {
+				ID int64 `json:"id"`
+			} `json:"items"`
+		} `json:"topsellers"`
+	} `json:"tabs"`
+}

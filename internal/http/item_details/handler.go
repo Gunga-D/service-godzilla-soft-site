@@ -2,10 +2,12 @@ package item_details
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
@@ -13,12 +15,14 @@ import (
 )
 
 type handler struct {
-	itemGetter itemGetter
+	itemGetter    itemGetter
+	recomendation recomendation
 }
 
-func NewHandler(itemGetter itemGetter) *handler {
+func NewHandler(itemGetter itemGetter, recomendation recomendation) *handler {
 	return &handler{
-		itemGetter: itemGetter,
+		itemGetter:    itemGetter,
+		recomendation: recomendation,
 	}
 }
 
@@ -38,6 +42,37 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return404("Такого товара нет в наличии", w)
 			return
 		}
+
+		wg := sync.WaitGroup{}
+
+		var similarGames []SimilarGameDTO
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if item.SteamBlock == nil {
+				return
+			}
+			recommendedItems, err := h.recomendation.Recommend(r.Context(), item.ID, item.SteamBlock.Genres)
+			if err != nil {
+				log.Printf("error to get recommended items: %v\n", err)
+				return
+			}
+			for _, recItem := range recommendedItems {
+				itemType := "cdkey"
+				if recItem.IsSteamGift {
+					itemType = "gift"
+				}
+
+				similarGames = append(similarGames, SimilarGameDTO{
+					ID:           recItem.ID,
+					Type:         itemType,
+					Title:        recItem.Title,
+					CategoryID:   recItem.CategoryID,
+					ThumbnailURL: recItem.ThumbnailURL,
+					CurrentPrice: float64(recItem.CurrentPrice) / 100,
+				})
+			}
+		}()
 
 		var oldPrice *float64
 		if item.OldPrice != nil {
@@ -126,6 +161,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			}
 		}
 
+		wg.Wait()
 		itemDTO := ItemDTO{
 			ID:             item.ID,
 			Title:          item.Title,
@@ -149,6 +185,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			YandexMarket:   yandexMarketBlock,
 			Genres:         genres,
 			PcRequirements: pcRequirements,
+			SimilarGames:   similarGames,
 		}
 
 		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))

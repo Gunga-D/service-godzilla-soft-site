@@ -41,6 +41,7 @@ import (
 	yandex_market_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/yandex_market"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/recomendation"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/suggest"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
@@ -85,10 +86,11 @@ func main() {
 	yaMarket := yandex_market.NewClient(os.Getenv("YA_MARKET_API_URL"), os.Getenv("YA_MARKET_AUTH"), int64(yaMarketBusinessID))
 
 	itemRepo := item_postgres.NewRepo(postgres)
+	itemRecommendation := recomendation.NewService(steamClient)
 	itemCache := item_cache.NewCache(itemRepo, []fillers.Filler{
 		yandex_market_filler.NewFiller(yaMarket),
 		steam_filler.NewFiller(steamClient),
-	})
+	}, itemRecommendation)
 	go itemCache.StartSync(ctx)
 	itemSuggestSrv := suggest.NewService(itemRepo)
 	go itemSuggestSrv.StartSync(ctx)
@@ -135,7 +137,7 @@ func main() {
 		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())
 		r1.Get("/new_items", new_items.NewHandler(itemCache).Handle())
 		r1.Get("/items", fetch_items.NewHandler(itemRepo).Handle())
-		r1.Get("/item_details", item_details.NewHandler(itemCache).Handle())
+		r1.Get("/item_details", item_details.NewHandler(itemCache, itemRecommendation).Handle())
 
 		// Пополнение Steam
 		r1.Post("/steam_calc", steam_calc_price.NewHandler().Handle())

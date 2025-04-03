@@ -105,3 +105,23 @@ func (c *client) AppDetails(ctx context.Context, appID int64) (*AppDetails, erro
 	}
 	return &appDetails.Data, nil
 }
+
+func (c *client) GetGenreApps(ctx context.Context, genre string) (*GenreList, error) {
+	resp, err := c.rc.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"genre": genre,
+			"cc":    "KZ",
+			"l":     "russian",
+		}).
+		SetResult(GenreList{}).
+		Get("https://store.steampowered.com/api/getappsingenre")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("status code is not ok = %d", resp.StatusCode())
+	}
+	return resp.Result().(*GenreList), nil
+}

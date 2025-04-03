@@ -23,6 +23,7 @@ type ItemDTO struct {
 	Genres         []string              `json:"genres,omitempty"`
 	Slip           string                `json:"slip"`
 	YandexMarket   *YandexMarketDTO      `json:"yandex_market,omitempty"`
+	SimilarGames   []SimilarGameDTO      `json:"similar_games,omitempty"`
 }
 
 type MovieDTO struct {
@@ -39,4 +40,13 @@ type YandexMarketDTO struct {
 	Rating       float64 `json:"rating"`
 	Price        float64 `json:"price"`
 	ReviewsCount int     `json:"reviews_count"`
+}
+
+type SimilarGameDTO struct {
+	ID           int64   `json:"id"`
+	Type         string  `json:"type"`
+	Title        string  `json:"title"`
+	CategoryID   int64   `json:"category_id"`
+	ThumbnailURL string  `json:"thumbnail_url"`
+	CurrentPrice float64 `json:"current_price"`
 }

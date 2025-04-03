@@ -20,23 +20,103 @@ type cache struct {
 	itemByName map[string]item.ItemCache
 	fillers    []fillers.Filler
 	getter     getter
+	rec        recomendation
 	lock       *sync.RWMutex
 }
 
-func NewCache(getter getter, fillers []fillers.Filler) *cache {
+func NewCache(getter getter, fillers []fillers.Filler, rec recomendation) *cache {
 	return &cache{
 		itemsByID:  make(map[int64]item.ItemCache),
 		itemByName: make(map[string]item.ItemCache),
 		getter:     getter,
+		rec:        rec,
 		lock:       &sync.RWMutex{},
 		fillers:    fillers,
 	}
 }
 
 func (c *cache) WarmUp(ctx context.Context) {
-	if err := c.sync(ctx, _itemsPerRequestLimit); err != nil {
+	if err := c.lazySync(ctx, _itemsPerRequestLimit); err != nil {
 		log.Printf("error to warmup cache: %v\n", err)
 	}
+}
+
+func (c *cache) lazySync(ctx context.Context, limit uint64) error {
+	defer func(start time.Time) {
+		log.Printf("[info] sync lazy items latency: %v\n", time.Since(start))
+	}(time.Now())
+
+	newItemsByID := make(map[int64]item.ItemCache)
+	newItemsByName := make(map[string]item.ItemCache)
+	itemsBySteamAppID := make(map[int64]item.ItemCache)
+
+	cursor := int64(0)
+	for {
+		gotItems, err := c.getter.FetchItemsPaginatedCursorItemId(ctx, limit, cursor)
+		if err != nil {
+			return fmt.Errorf("failed to fetch items: %v", err)
+		}
+
+		var notCachedItems []item.ItemCache
+		for _, gotItem := range gotItems {
+			currentItem, err := c.GetItemByID(ctx, gotItem.ID)
+			if err != nil {
+				continue
+			}
+
+			if currentItem == nil {
+				notCachedItems = append(notCachedItems, item.ItemCache{
+					Item: gotItem,
+				})
+			} else {
+				newItemsByID[gotItem.ID] = item.ItemCache{
+					Item:         gotItem,
+					YandexMarket: currentItem.YandexMarket,
+					SteamBlock:   currentItem.SteamBlock,
+				}
+				newItemsByName[gotItem.Title] = item.ItemCache{
+					Item:         gotItem,
+					YandexMarket: currentItem.YandexMarket,
+					SteamBlock:   currentItem.SteamBlock,
+				}
+				if gotItem.SteamAppID != nil {
+					itemsBySteamAppID[*gotItem.SteamAppID] = item.ItemCache{
+						Item:         gotItem,
+						YandexMarket: currentItem.YandexMarket,
+						SteamBlock:   currentItem.SteamBlock,
+					}
+				}
+			}
+		}
+
+		for _, f := range c.fillers {
+			err = f.Fill(ctx, notCachedItems)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, i := range notCachedItems {
+			newItemsByID[i.ID] = i
+			newItemsByName[i.Title] = i
+			if i.SteamAppID != nil {
+				itemsBySteamAppID[*i.SteamAppID] = i
+			}
+		}
+
+		if len(gotItems) < int(limit) {
+			break
+		}
+		cursor = gotItems[len(gotItems)-1].ID
+	}
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.itemsByID = newItemsByID
+	c.itemByName = newItemsByName
+
+	go c.rec.Sync(context.Background(), itemsBySteamAppID)
+	return nil
 }
 
 func (c *cache) StartSync(ctx context.Context) {
@@ -66,6 +146,7 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 	cursor := int64(0)
 	newItemsByID := make(map[int64]item.ItemCache)
 	newItemsByName := make(map[string]item.ItemCache)
+	itemsBySteamAppID := make(map[int64]item.ItemCache)
 	for {
 		gotItems, err := c.getter.FetchItemsPaginatedCursorItemId(ctx, limit, cursor)
 		if err != nil {
@@ -89,6 +170,9 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 		for _, i := range cacheItems {
 			newItemsByID[i.ID] = i
 			newItemsByName[i.Title] = i
+			if i.SteamAppID != nil {
+				itemsBySteamAppID[*i.SteamAppID] = i
+			}
 		}
 
 		if len(gotItems) < int(limit) {
@@ -101,6 +185,9 @@ func (c *cache) sync(ctx context.Context, limit uint64) error {
 	defer c.lock.Unlock()
 	c.itemsByID = newItemsByID
 	c.itemByName = newItemsByName
+
+	go c.rec.Sync(context.Background(), itemsBySteamAppID)
+
 	return nil
 }
 
