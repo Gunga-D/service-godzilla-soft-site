@@ -16,6 +16,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_load_codes"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_recalc_price"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_save_thumbnail"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_warmup_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/cart_item"
@@ -124,6 +125,7 @@ func main() {
 			r2.Post("/create_item", admin_create_item.NewHandler(itemRepo).Handle())
 			r2.Post("/load_codes", admin_load_codes.NewHandler(codeRepo, itemRepo, databusClient).Handle())
 			r2.Post("/save_thumbnail", admin_save_thumbnail.NewHandler(os.Getenv("GODZILLA_SOFT_DISK_LOGIN"), os.Getenv("GODZILLA_SOFT_DISK_PASSWORD")).Handle())
+			r2.Post("/recalc_price", admin_recalc_price.NewHandler(itemRepo, steamClient).Handle())
 		})
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())

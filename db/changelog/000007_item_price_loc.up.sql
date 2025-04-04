@@ -1,0 +1,1 @@
+alter table public.item add column price_loc text;

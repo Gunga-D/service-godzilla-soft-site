@@ -30,6 +30,7 @@ type Item struct {
 	IsSteamGift   bool      `db:"is_steam_gift"`
 	YandexID      *string   `db:"yandex_id"`
 	SteamAppID    *int64    `db:"steam_app_id"`
+	PriceLoc      *string   `db:"price_loc"`
 	CreatedAt     time.Time `db:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at"`
 }

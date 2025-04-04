@@ -108,3 +108,16 @@ type GenreList struct {
 		} `json:"topsellers"`
 	} `json:"tabs"`
 }
+
+type FetchPricesResponse map[string]PriceResult
+
+type PriceResult struct {
+	Success bool `json:"success"`
+	Data    struct {
+		PriceOverview struct {
+			Currency string `json:"currency"`
+			Initial  int64  `json:"initial"`
+			Final    int64  `json:"final"`
+		} `json:"price_overview"`
+	} `json:"data"`
+}

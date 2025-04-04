@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -124,4 +125,29 @@ func (c *client) GetGenreApps(ctx context.Context, genre string) (*GenreList, er
 		return nil, fmt.Errorf("status code is not ok = %d", resp.StatusCode())
 	}
 	return resp.Result().(*GenreList), nil
+}
+
+func (c *client) FetchPrices(ctx context.Context, appIds []string, loc *string) (*FetchPricesResponse, error) {
+	locCode := "KZ"
+	if loc != nil {
+		locCode = *loc
+	}
+	resp, err := c.rc.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetQueryParams(map[string]string{
+			"appids":  strings.Join(appIds, ","),
+			"cc":      locCode,
+			"l":       "russian",
+			"filters": "price_overview",
+		}).
+		SetResult(FetchPricesResponse{}).
+		Get("https://store.steampowered.com/api/appdetails")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("status code is not ok = %d", resp.StatusCode())
+	}
+	return resp.Result().(*FetchPricesResponse), nil
 }

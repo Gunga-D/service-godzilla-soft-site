@@ -151,3 +151,21 @@ func (r *repo) FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64
 
 	return res, nil
 }
+
+func (r *repo) UpdatePrice(ctx context.Context, itemID int64, currentPrice int64, limitPrice int64, priceLoc string) error {
+	q := sq.Update("item").
+		Where(sq.Eq{"id": itemID}).
+		Set("current_price", currentPrice).
+		Set("limit_price", limitPrice).
+		Set("price_loc", priceLoc)
+
+	query, args, err := q.
+		PlaceholderFormat(sq.Dollar).ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.ExecContext(ctx, query, args...)
+	return err
+}
