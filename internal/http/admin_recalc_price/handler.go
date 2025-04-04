@@ -46,20 +46,26 @@ func (h *handler) Handle() http.HandlerFunc {
 				return
 			}
 
-			steamAppIds := make([]string, 0, len(allItems))
+			kzSteamAppIds := make([]string, 0, len(allItems))
+			ruSteamAppIds := make([]string, 0, len(allItems))
 			for _, item := range allItems {
-				steamAppIds = append(steamAppIds, fmt.Sprint(*item.SteamAppID))
+				kzSteamAppIds = append(kzSteamAppIds, fmt.Sprint(*item.SteamAppID))
+
+				// Тут для ru исключаем Battlefield™ V и Metro 2033 Redux
+				if *item.SteamAppID != 1238810 && *item.SteamAppID != 286690 {
+					ruSteamAppIds = append(ruSteamAppIds, fmt.Sprint(*item.SteamAppID))
+				}
 			}
-			kztPricesResp, err := h.steamClient.FetchPrices(ctx, steamAppIds, pointer.ToString("KZ"))
+			kztPricesResp, err := h.steamClient.FetchPrices(ctx, kzSteamAppIds, pointer.ToString("KZ"))
 			if err != nil {
-				log.Printf("cannot get prices from kz steam for %v: %v\n", strings.Join(steamAppIds, ","), err)
+				log.Printf("cannot get prices from kz steam for %v: %v\n", strings.Join(kzSteamAppIds, ","), err)
 				return
 			}
 			kztMapPrices := *kztPricesResp
 
-			ruPricesResp, err := h.steamClient.FetchPrices(ctx, steamAppIds, pointer.ToString("RU"))
+			ruPricesResp, err := h.steamClient.FetchPrices(ctx, ruSteamAppIds, pointer.ToString("RU"))
 			if err != nil {
-				log.Printf("cannot get prices from ru steam for %v: %v\n", strings.Join(steamAppIds, ","), err)
+				log.Printf("cannot get prices from ru steam for %v: %v\n", strings.Join(ruSteamAppIds, ","), err)
 				return
 			}
 			ruMapPrices := *ruPricesResp
