@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/AlekSi/pointer"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
@@ -51,14 +52,14 @@ func (h *handler) Handle() http.HandlerFunc {
 			}
 			kztPricesResp, err := h.steamClient.FetchPrices(ctx, steamAppIds, pointer.ToString("KZ"))
 			if err != nil {
-				log.Printf("cannot get prices from kz steam: %v\n", err)
+				log.Printf("cannot get prices from kz steam for %v: %v\n", strings.Join(steamAppIds, ","), err)
 				return
 			}
 			kztMapPrices := *kztPricesResp
 
 			ruPricesResp, err := h.steamClient.FetchPrices(ctx, steamAppIds, pointer.ToString("RU"))
 			if err != nil {
-				log.Printf("cannot get prices from ru steam: %v\n", err)
+				log.Printf("cannot get prices from ru steam for %v: %v\n", strings.Join(steamAppIds, ","), err)
 				return
 			}
 			ruMapPrices := *ruPricesResp

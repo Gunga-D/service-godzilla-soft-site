@@ -56,7 +56,7 @@ func (s *service) Sync(ctx context.Context, itemsBySteamAppID map[int64]item.Ite
 }
 
 func (s *service) Recommend(ctx context.Context, itemID int64, genres []string) ([]item.ItemCache, error) {
-	var res []item.ItemCache
+	recItems := make(map[int64]item.ItemCache)
 	for _, genre := range genres {
 		if _, skip := skipGenres[genre]; skip {
 			continue
@@ -68,13 +68,19 @@ func (s *service) Recommend(ctx context.Context, itemID int64, genres []string) 
 			s.lock.RUnlock()
 			continue
 		}
+		s.lock.RUnlock()
+
 		for _, cachedItem := range cachedItems {
 			if cachedItem.ID == itemID {
 				continue
 			}
-			res = append(res, cachedItem)
+			recItems[cachedItem.ID] = cachedItem
 		}
-		s.lock.RUnlock()
+	}
+
+	var res []item.ItemCache
+	for _, recItem := range recItems {
+		res = append(res, recItem)
 	}
 	return res, nil
 }
