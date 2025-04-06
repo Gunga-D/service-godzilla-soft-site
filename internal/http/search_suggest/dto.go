@@ -9,13 +9,17 @@ type SearchSuggestResponsePayload struct {
 }
 
 type SearchSuggestDTO struct {
-	ItemID           int64    `json:"item_id"`
-	ItemCategoryID   int64    `json:"item_category_id"`
-	ItemTitle        string   `json:"item_title"`
-	ItemCurrentPrice float64  `json:"item_current_price"`
-	ItemIsForSale    bool     `json:"item_is_for_sale"`
-	ItemOldPrice     *float64 `json:"item_old_price"`
-	ItemThumbnailURL string   `json:"item_thumbnail_url"`
-	ItemType         string   `json:"item_type"`
+	SuggestType      string   `json:"suggest_type"`
+	BannerTitle      *string  `json:"banner_title,omitempty"`
+	BannerImage      *string  `json:"banner_image,omitempty"`
+	BannerURL        *string  `json:"banner_url,omitempty"`
+	ItemID           *int64   `json:"item_id,omitempty"`
+	ItemCategoryID   *int64   `json:"item_category_id,omitempty"`
+	ItemTitle        *string  `json:"item_title,omitempty"`
+	ItemCurrentPrice *float64 `json:"item_current_price,omitempty"`
+	ItemIsForSale    *bool    `json:"item_is_for_sale,omitempty"`
+	ItemOldPrice     *float64 `json:"item_old_price,omitempty"`
+	ItemThumbnailURL *string  `json:"item_thumbnail_url,omitempty"`
+	ItemType         *string  `json:"item_type,omitempty"`
 	Probability      float64  `json:"probability"`
 }

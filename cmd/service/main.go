@@ -93,7 +93,7 @@ func main() {
 		steam_filler.NewFiller(steamClient),
 	}, itemRecommendation)
 	go itemCache.StartSync(ctx)
-	itemSuggestSrv := suggest.NewService(itemRepo)
+	itemSuggestSrv := suggest.NewService(itemRepo, itemCache)
 	go itemSuggestSrv.StartSync(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres)
@@ -130,7 +130,7 @@ func main() {
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())
 
-		r1.Post("/search_suggest", search_suggest.NewHandler(itemSuggestSrv, itemCache).Handle())
+		r1.Post("/search_suggest", search_suggest.NewHandler(itemSuggestSrv).Handle())
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
 

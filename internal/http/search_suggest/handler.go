@@ -10,14 +10,12 @@ import (
 )
 
 type handler struct {
-	suggester  suggester
-	itemGetter itemGetter
+	suggester suggester
 }
 
-func NewHandler(suggester suggester, itemGetter itemGetter) *handler {
+func NewHandler(suggester suggester) *handler {
 	return &handler{
-		suggester:  suggester,
-		itemGetter: itemGetter,
+		suggester: suggester,
 	}
 }
 
@@ -30,42 +28,47 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 		logger.Get().Log(fmt.Sprintf("🔍 Поиск товара по следующему запросу: \"%s\"", body.Query))
 
-		items, err := h.suggester.Suggest(body.Query)
+		suggested, err := h.suggester.Suggest(r.Context(), body.Query)
 		if err != nil {
 			api.Return500("Непредвиденная ошибка", w)
 			return
 		}
 
-		res := make([]SearchSuggestDTO, 0, len(items))
-		for _, item := range items {
-			v, err := h.itemGetter.GetItemByName(r.Context(), item.Name)
-			if err != nil {
-				continue
-			}
-			if v == nil {
-				continue
-			}
+		res := make([]SearchSuggestDTO, 0, len(suggested))
+		for _, s := range suggested {
+			s := s
+			if s.Type == "item" && s.Item != nil {
+				var itemOldPrice *float64
+				if s.Item.OldPrice != nil {
+					itemOldPrice = pointer.ToFloat64(float64(*s.Item.OldPrice) / 100)
+				}
 
-			var itemOldPrice *float64
-			if v.OldPrice != nil {
-				itemOldPrice = pointer.ToFloat64(float64(*v.OldPrice) / 100)
+				itemType := "cdkey"
+				if s.Item.IsSteamGift {
+					itemType = "gift"
+				}
+				res = append(res, SearchSuggestDTO{
+					SuggestType:      s.Type,
+					ItemID:           &s.Item.ID,
+					ItemTitle:        &s.Item.Title,
+					ItemCategoryID:   &s.Item.CategoryID,
+					ItemCurrentPrice: pointer.ToFloat64(float64(s.Item.CurrentPrice) / 100),
+					ItemIsForSale:    &s.Item.IsForSale,
+					ItemOldPrice:     itemOldPrice,
+					ItemThumbnailURL: &s.Item.ThumbnailURL,
+					Probability:      s.Probability,
+					ItemType:         pointer.ToString(itemType),
+				})
 			}
-
-			itemType := "cdkey"
-			if v.IsSteamGift {
-				itemType = "gift"
+			if s.Type == "banner" {
+				res = append(res, SearchSuggestDTO{
+					SuggestType: s.Type,
+					BannerTitle: &s.Banner.Title,
+					BannerImage: &s.Banner.Image,
+					BannerURL:   &s.Banner.URL,
+					Probability: s.Probability,
+				})
 			}
-			res = append(res, SearchSuggestDTO{
-				ItemID:           v.ID,
-				ItemTitle:        v.Title,
-				ItemCategoryID:   v.CategoryID,
-				ItemCurrentPrice: float64(v.CurrentPrice) / 100,
-				ItemIsForSale:    v.IsForSale,
-				ItemOldPrice:     itemOldPrice,
-				ItemThumbnailURL: v.ThumbnailURL,
-				Probability:      item.Probability,
-				ItemType:         itemType,
-			})
 		}
 		api.ReturnOK(SearchSuggestResponsePayload{
 			Items: res,
