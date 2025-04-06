@@ -128,6 +128,10 @@ func (h *handler) Handle() http.HandlerFunc {
 		if desc == nil && item.SteamBlock != nil {
 			desc = pointer.ToString(item.SteamBlock.ShortDescription)
 		}
+		detailedDescription := desc
+		if item.SteamBlock != nil {
+			detailedDescription = pointer.ToString(item.SteamBlock.DetailedDescription)
+		}
 
 		var pcRequirements *SteamRequirementsDTO
 		if item.SteamBlock != nil {
@@ -163,29 +167,30 @@ func (h *handler) Handle() http.HandlerFunc {
 
 		wg.Wait()
 		itemDTO := ItemDTO{
-			ID:             item.ID,
-			Title:          item.Title,
-			Type:           itemType,
-			Description:    desc,
-			CategoryID:     item.CategoryID,
-			Platform:       item.Platform,
-			Region:         item.Region,
-			Publisher:      publisher,
-			Creator:        creator,
-			ReleaseDate:    releaseDate,
-			CurrentPrice:   float64(item.CurrentPrice) / 100,
-			IsForSale:      item.IsForSale,
-			OldPrice:       oldPrice,
-			ThumbnailURL:   item.ThumbnailURL,
-			BackgroundURL:  backgroundURl,
-			BxImageURL:     bxImageURL,
-			BxGalleryUrls:  bxGalleryUrls,
-			BxMovies:       bxMovies,
-			Slip:           item.Slip,
-			YandexMarket:   yandexMarketBlock,
-			Genres:         genres,
-			PcRequirements: pcRequirements,
-			SimilarGames:   similarGames,
+			ID:                  item.ID,
+			Title:               item.Title,
+			Type:                itemType,
+			Description:         desc,
+			DetailedDescription: detailedDescription,
+			CategoryID:          item.CategoryID,
+			Platform:            item.Platform,
+			Region:              item.Region,
+			Publisher:           publisher,
+			Creator:             creator,
+			ReleaseDate:         releaseDate,
+			CurrentPrice:        float64(item.CurrentPrice) / 100,
+			IsForSale:           item.IsForSale,
+			OldPrice:            oldPrice,
+			ThumbnailURL:        item.ThumbnailURL,
+			BackgroundURL:       backgroundURl,
+			BxImageURL:          bxImageURL,
+			BxGalleryUrls:       bxGalleryUrls,
+			BxMovies:            bxMovies,
+			Slip:                item.Slip,
+			YandexMarket:        yandexMarketBlock,
+			Genres:              genres,
+			PcRequirements:      pcRequirements,
+			SimilarGames:        similarGames,
 		}
 
 		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))
