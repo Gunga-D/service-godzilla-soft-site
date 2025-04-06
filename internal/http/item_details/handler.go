@@ -130,7 +130,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 		detailedDescription := desc
 		if item.SteamBlock != nil {
-			detailedDescription = pointer.ToString(item.SteamBlock.DetailedDescription)
+			detailedDescription = pointer.ToString(item.SteamBlock.AboutTheGame)
 		}
 
 		var pcRequirements *SteamRequirementsDTO
