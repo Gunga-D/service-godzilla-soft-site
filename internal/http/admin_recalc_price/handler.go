@@ -40,7 +40,9 @@ func (h *handler) Handle() http.HandlerFunc {
 				sq.Eq{"is_steam_gift": true},
 				sq.Eq{"status": "active"},
 				sq.NotEq{"steam_app_id": nil},
-			}, 1000, 0, false)
+			}, 1000, 0, []string{
+				"id",
+			})
 			if err != nil {
 				log.Printf("cannot fetch all items to recalc: %v\n", err)
 				return

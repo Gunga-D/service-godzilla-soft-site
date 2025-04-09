@@ -13,6 +13,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_market"
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
+	collection_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/collection/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_load_codes"
@@ -23,6 +24,8 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/categories_tree"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/check_voucher"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/create_order"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_collection_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_collections"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/item_details"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/mdw"
@@ -104,6 +107,7 @@ func main() {
 
 	codeRepo := code_postgres.NewRepo(postgres)
 	orderRepo := order_postgres.NewRepo(postgres)
+	collectionRepo := collection_postgres.NewRepo(postgres)
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -134,6 +138,8 @@ func main() {
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
 
+		r1.Get("/collections", fetch_collections.NewHandler(collectionRepo).Handle())
+		r1.Get("/collection_items", fetch_collection_items.NewHandler(itemCache, collectionRepo).Handle())
 		r1.Get("/popular_items", popular_items.NewHandler(itemCache).Handle())
 		r1.Get("/recomendation_items", recomendation_items.NewHandler(itemCache).Handle())
 		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())

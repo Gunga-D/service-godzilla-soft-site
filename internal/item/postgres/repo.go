@@ -105,15 +105,10 @@ func (r *repo) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
 	return &res[0], nil
 }
 
-func (r *repo) FetchItemsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64, hasRandomOrder bool) ([]item.Item, error) {
-	orderBy := "id"
-	if hasRandomOrder {
-		orderBy = "random()"
-	}
-
+func (r *repo) FetchItemsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64, orderBy []string) ([]item.Item, error) {
 	query, args, err := sq.Select("*").From(`public.item`).
 		Where(criteria).
-		OrderBy(orderBy).
+		OrderBy(orderBy...).
 		Limit(limit).
 		Offset(offset).
 		PlaceholderFormat(sq.Dollar).ToSql()

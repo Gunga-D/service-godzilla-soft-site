@@ -33,9 +33,25 @@ func (h *handler) Handle() http.HandlerFunc {
 			offset = 0
 		}
 
-		hasRandomOrder := false
+		orderBy := []string{
+			"id",
+		}
 		if r.URL.Query().Get("random") == "1" {
-			hasRandomOrder = true
+			orderBy = []string{
+				"random()",
+			}
+		}
+		if r.URL.Query().Get("popular") == "1" {
+			orderBy = []string{
+				"popular",
+				"id",
+			}
+		}
+		if r.URL.Query().Get("new") == "1" {
+			orderBy = []string{
+				"new",
+				"id",
+			}
 		}
 
 		criteries := sq.And{
@@ -67,8 +83,11 @@ func (h *handler) Handle() http.HandlerFunc {
 		if v := r.URL.Query().Get("platform"); v != "" {
 			criteries = append(criteries, sq.Eq{"platform": v})
 		}
+		if r.URL.Query().Get("unavailable") == "1" {
+			criteries = append(criteries, sq.Eq{"unavailable": true})
+		}
 
-		items, err := h.itemRepo.FetchItemsByFilter(r.Context(), criteries, limit, offset, hasRandomOrder)
+		items, err := h.itemRepo.FetchItemsByFilter(r.Context(), criteries, limit, offset, orderBy)
 		if err != nil {
 			api.Return500("Ошибка получения каталога", w)
 			return
