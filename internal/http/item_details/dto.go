@@ -18,6 +18,7 @@ type ItemDTO struct {
 	ThumbnailURL        string                `json:"thumbnail_url"`
 	BackgroundURL       *string               `json:"background_url,omitempty"`
 	BxImageURL          *string               `json:"bx_image_url,omitempty"`
+	HorizontalImageURL  *string               `json:"horizontal_image_url,omitempty"`
 	BxGalleryUrls       []string              `json:"bx_gallery_urls,omitempty"`
 	BxMovies            []MovieDTO            `json:"movies,omitempty"`
 	PcRequirements      *SteamRequirementsDTO `json:"pc_requirements,omitempty"`

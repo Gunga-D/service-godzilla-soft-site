@@ -156,6 +156,11 @@ func (h *handler) Handle() http.HandlerFunc {
 			backgroundURl = &item.SteamBlock.Background
 		}
 
+		var horizontalImageURL *string
+		if item.SteamBlock != nil {
+			horizontalImageURL = pointer.ToString(item.SteamBlock.HeaderImage)
+		}
+
 		var yandexMarketBlock *YandexMarketDTO
 		if item.YandexMarket != nil {
 			yandexMarketBlock = &YandexMarketDTO{
@@ -191,6 +196,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			Genres:              genres,
 			PcRequirements:      pcRequirements,
 			SimilarGames:        similarGames,
+			HorizontalImageURL:  horizontalImageURL,
 		}
 
 		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))
