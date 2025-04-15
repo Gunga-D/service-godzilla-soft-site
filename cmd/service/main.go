@@ -144,7 +144,7 @@ func main() {
 		r1.Get("/recomendation_items", recomendation_items.NewHandler(itemCache).Handle())
 		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())
 		r1.Get("/new_items", new_items.NewHandler(itemCache).Handle())
-		r1.Get("/items", fetch_items.NewHandler(itemRepo).Handle())
+		r1.Get("/items", fetch_items.NewHandler(itemRepo, itemCache).Handle())
 		r1.Get("/item_details", item_details.NewHandler(itemCache, itemRecommendation).Handle())
 
 		// Пополнение Steam
