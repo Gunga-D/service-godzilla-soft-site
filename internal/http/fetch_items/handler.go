@@ -13,12 +13,14 @@ import (
 )
 
 type handler struct {
-	itemRepo item_info.ReadRepository
+	itemRepo  item_info.ReadRepository
+	itemCache itemCache
 }
 
-func NewHandler(itemRepo item_info.ReadRepository) *handler {
+func NewHandler(itemRepo item_info.ReadRepository, itemCache itemCache) *handler {
 	return &handler{
-		itemRepo: itemRepo,
+		itemRepo:  itemRepo,
+		itemCache: itemCache,
 	}
 }
 
@@ -108,17 +110,43 @@ func (h *handler) Handle() http.HandlerFunc {
 				itemType = "gift"
 			}
 
+			cacheItem, err := h.itemCache.GetItemByID(r.Context(), item.ID)
+			if err != nil {
+				continue
+			}
+			if cacheItem == nil {
+				continue
+			}
+
+			desc := item.Description
+			if desc == nil && cacheItem.SteamBlock != nil {
+				desc = pointer.ToString(cacheItem.SteamBlock.ShortDescription)
+			}
+
+			var genres []string
+			if cacheItem.SteamBlock != nil {
+				genres = cacheItem.SteamBlock.Genres
+			}
+
+			var horizontalImageURL *string
+			if cacheItem.SteamBlock != nil {
+				horizontalImageURL = pointer.ToString(cacheItem.SteamBlock.HeaderImage)
+			}
+
 			res = append(res, ItemDTO{
-				ID:           item.ID,
-				Title:        item.Title,
-				Platform:     item.Platform,
-				Region:       item.Region,
-				CategoryID:   item.CategoryID,
-				CurrentPrice: float64(item.CurrentPrice) / 100,
-				IsForSale:    item.IsForSale,
-				OldPrice:     oldPrice,
-				ThumbnailURL: item.ThumbnailURL,
-				Type:         itemType,
+				ID:                 item.ID,
+				Title:              item.Title,
+				Platform:           item.Platform,
+				Region:             item.Region,
+				CategoryID:         item.CategoryID,
+				CurrentPrice:       float64(item.CurrentPrice) / 100,
+				IsForSale:          item.IsForSale,
+				OldPrice:           oldPrice,
+				ThumbnailURL:       item.ThumbnailURL,
+				Type:               itemType,
+				Description:        desc,
+				Genres:             genres,
+				HorizontalImageURL: horizontalImageURL,
 			})
 		}
 		api.ReturnOK(res, w)
