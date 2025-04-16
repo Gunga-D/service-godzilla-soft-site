@@ -14,4 +14,5 @@ type ItemDTO struct {
 	Genres             []string `json:"genres,omitempty"`
 	Description        *string  `json:"description"`
 	Type               string   `json:"type"`
+	ReleaseDate        *string  `json:"release_date"`
 }

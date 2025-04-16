@@ -133,6 +133,11 @@ func (h *handler) Handle() http.HandlerFunc {
 				horizontalImageURL = pointer.ToString(cacheItem.SteamBlock.HeaderImage)
 			}
 
+			var releaseDate *string
+			if cacheItem.SteamBlock != nil {
+				releaseDate = pointer.ToString(cacheItem.SteamBlock.ReleaseDate)
+			}
+
 			res = append(res, ItemDTO{
 				ID:                 item.ID,
 				Title:              item.Title,
@@ -147,6 +152,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				Description:        desc,
 				Genres:             genres,
 				HorizontalImageURL: horizontalImageURL,
+				ReleaseDate:        releaseDate,
 			})
 		}
 		api.ReturnOK(res, w)
