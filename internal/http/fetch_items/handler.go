@@ -1,10 +1,10 @@
 package fetch_items
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
@@ -74,16 +74,23 @@ func (h *handler) Handle() http.HandlerFunc {
 			criteries = append(criteries, sq.Eq{"is_steam_gift": false})
 		}
 		if v := r.URL.Query().Get("region"); v != "" {
-			decodedV, err := url.QueryUnescape(v)
-			if err != nil {
-				api.Return400("Параметр region должен быть в формате url encoded", w)
-				return
+			regionCriteria := sq.Or{}
+			for _, rawRegion := range strings.Split(v, ";") {
+				decodedRegion, err := url.QueryUnescape(rawRegion)
+				if err != nil {
+					api.Return400("Параметр region должен быть в формате url encoded", w)
+					return
+				}
+				regionCriteria = append(regionCriteria, sq.Eq{"region": decodedRegion})
 			}
-			log.Printf("trying to fetch items with region - %s", decodedV)
-			criteries = append(criteries, sq.Eq{"region": decodedV})
+			criteries = append(criteries, regionCriteria)
 		}
 		if v := r.URL.Query().Get("platform"); v != "" {
-			criteries = append(criteries, sq.Eq{"platform": v})
+			platformCriteria := sq.Or{}
+			for _, platform := range strings.Split(v, ";") {
+				platformCriteria = append(platformCriteria, sq.Eq{"platform": platform})
+			}
+			criteries = append(criteries, platformCriteria)
 		}
 		if r.URL.Query().Get("unavailable") == "1" {
 			criteries = append(criteries, sq.Eq{"unavailable": true})
