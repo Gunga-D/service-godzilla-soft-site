@@ -18,6 +18,25 @@ func NewRepo(db postgres.TxDatabase) *repo {
 	}
 }
 
+func (r *repo) GetCollectionByID(ctx context.Context, id int64) (*collection.Collection, error) {
+	query, args, err := sq.Select("*").From(`public.collection`).
+		Where(sq.Eq{"id": id}).
+		Limit(1).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []collection.Collection
+	if err := r.db.SelectContext(ctx, &res, query, args...); err != nil {
+		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return &res[0], nil
+}
+
 func (r *repo) FetchCollectionsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64) ([]collection.Collection, error) {
 	query, args, err := sq.Select("*").From(`public.collection`).
 		Where(criteria).

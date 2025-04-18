@@ -23,6 +23,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/cart_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/categories_tree"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/check_voucher"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/collection_details"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/create_order"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_collection_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_collections"
@@ -140,6 +141,8 @@ func main() {
 
 		r1.Get("/collections", fetch_collections.NewHandler(collectionRepo).Handle())
 		r1.Get("/collection_items", fetch_collection_items.NewHandler(itemCache, collectionRepo).Handle())
+		r1.Get("/collection_details", collection_details.NewHandler(collectionRepo).Handle())
+
 		r1.Get("/popular_items", popular_items.NewHandler(itemCache).Handle())
 		r1.Get("/recomendation_items", recomendation_items.NewHandler(itemCache).Handle())
 		r1.Get("/sales_items", sales_items.NewHandler(itemCache).Handle())
