@@ -12,6 +12,7 @@ type WriteRepository interface {
 }
 
 type ReadRepository interface {
+	GetItemsCountByFilter(ctx context.Context, criteria sq.And) (int64, error)
 	FetchItemsByFilter(ctx context.Context, criteria sq.And, limit uint64, offset uint64, orderBy []string) ([]Item, error)
 }
 

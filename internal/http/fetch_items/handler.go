@@ -12,6 +12,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
+const (
+	_defaultCount = 0
+)
+
 type handler struct {
 	itemRepo  item_info.ReadRepository
 	itemCache itemCache
@@ -101,6 +105,11 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return500("Ошибка получения каталога", w)
 			return
 		}
+		itemsCount, err := h.itemRepo.GetItemsCountByFilter(r.Context(), criteries)
+		if err != nil {
+			itemsCount = _defaultCount
+		}
+
 		res := make([]ItemDTO, 0, len(items))
 		for _, item := range items {
 			if _, ok := item_info.NotShowedItems[item.ID]; ok {
@@ -160,6 +169,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				Genres:             genres,
 				HorizontalImageURL: horizontalImageURL,
 				ReleaseDate:        releaseDate,
+				TotalCount:         &itemsCount,
 			})
 		}
 		api.ReturnOK(res, w)

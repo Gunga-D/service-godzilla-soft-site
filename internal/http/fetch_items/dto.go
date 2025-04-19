@@ -15,4 +15,5 @@ type ItemDTO struct {
 	Description        *string  `json:"description"`
 	Type               string   `json:"type"`
 	ReleaseDate        *string  `json:"release_date"`
+	TotalCount         *int64   `json:"total_count,omitempty"`
 }

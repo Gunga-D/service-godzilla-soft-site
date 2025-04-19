@@ -124,6 +124,22 @@ func (r *repo) FetchItemsByFilter(ctx context.Context, criteria sq.And, limit ui
 	return res, nil
 }
 
+func (r *repo) GetItemsCountByFilter(ctx context.Context, criteria sq.And) (int64, error) {
+	query, args, err := sq.Select("*").From(`public.item`).
+		Where(criteria).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	var res int64
+	err = r.db.GetContext(ctx, &res, query, args...)
+	if err != nil {
+		return 0, err
+	}
+	return res, nil
+}
+
 func (r *repo) FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64, cursor int64) ([]item.Item, error) {
 	query, args, err := sq.Select("*").From(`public.item`).
 		Where(sq.And{
