@@ -19,23 +19,25 @@ type Item struct {
 	Region      string  `db:"region"`
 	// Указывается с копейками, таким образом:
 	// 100 рублей = 10000
-	CurrentPrice  int64     `db:"current_price"`
-	IsForSale     bool      `db:"is_for_sale"`
-	OldPrice      *int64    `db:"old_price"`
-	LimitPrice    *int64    `db:"limit_price"`
-	ThumbnailURL  string    `db:"thumbnail_url"`
-	BackgroundURL *string   `db:"background_url"`
-	Status        string    `db:"status"`
-	Slip          string    `db:"slip"`
-	IsSteamGift   bool      `db:"is_steam_gift"`
-	YandexID      *string   `db:"yandex_id"`
-	SteamAppID    *int64    `db:"steam_app_id"`
-	PriceLoc      *string   `db:"price_loc"`
-	Popular       *int      `db:"popular"`
-	New           *int      `db:"new"`
-	Unavailable   bool      `db:"unavailable"`
-	CreatedAt     time.Time `db:"created_at"`
-	UpdatedAt     time.Time `db:"updated_at"`
+	CurrentPrice    int64     `db:"current_price"`
+	IsForSale       bool      `db:"is_for_sale"`
+	OldPrice        *int64    `db:"old_price"`
+	LimitPrice      *int64    `db:"limit_price"`
+	ThumbnailURL    string    `db:"thumbnail_url"`
+	BackgroundURL   *string   `db:"background_url"`
+	Status          string    `db:"status"`
+	Slip            string    `db:"slip"`
+	IsSteamGift     bool      `db:"is_steam_gift"`
+	YandexID        *string   `db:"yandex_id"`
+	SteamAppID      *int64    `db:"steam_app_id"`
+	PriceLoc        *string   `db:"price_loc"`
+	Popular         *int      `db:"popular"`
+	New             *int      `db:"new"`
+	Unavailable     bool      `db:"unavailable"`
+	HorizontalImage *string   `db:"horizontal_image"`
+	VerticalImage   *string   `db:"vertical_image"`
+	CreatedAt       time.Time `db:"created_at"`
+	UpdatedAt       time.Time `db:"updated_at"`
 }
 
 type ItemYandexMarketBlock struct {

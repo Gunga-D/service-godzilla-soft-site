@@ -144,8 +144,8 @@ func (h *handler) Handle() http.HandlerFunc {
 				genres = cacheItem.SteamBlock.Genres
 			}
 
-			var horizontalImageURL *string
-			if cacheItem.SteamBlock != nil {
+			horizontalImageURL := item.HorizontalImage
+			if horizontalImageURL == nil && cacheItem.SteamBlock != nil {
 				horizontalImageURL = pointer.ToString(cacheItem.SteamBlock.HeaderImage)
 			}
 

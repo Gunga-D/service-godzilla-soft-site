@@ -141,8 +141,8 @@ func (h *handler) Handle() http.HandlerFunc {
 			}
 		}
 
-		var bxImageURL *string
-		if item.SteamAppID != nil {
+		bxImageURL := item.VerticalImage
+		if bxImageURL == nil && item.SteamAppID != nil {
 			bxImageURL = pointer.ToString(fmt.Sprintf("https://steamcdn-a.akamaihd.net/steam/apps/%d/library_600x900.jpg", *item.SteamAppID))
 		}
 
