@@ -1,6 +1,7 @@
 package fetch_items
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -107,6 +108,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 		itemsCount, err := h.itemRepo.GetItemsCountByFilter(r.Context(), criteries)
 		if err != nil {
+			log.Println(err)
 			itemsCount = _defaultCount
 		}
 

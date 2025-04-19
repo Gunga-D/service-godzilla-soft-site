@@ -125,7 +125,7 @@ func (r *repo) FetchItemsByFilter(ctx context.Context, criteria sq.And, limit ui
 }
 
 func (r *repo) GetItemsCountByFilter(ctx context.Context, criteria sq.And) (int64, error) {
-	query, args, err := sq.Select("*").From(`public.item`).
+	query, args, err := sq.Select("count(*)").From(`public.item`).
 		Where(criteria).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
