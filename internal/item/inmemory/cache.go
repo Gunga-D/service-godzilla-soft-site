@@ -212,3 +212,14 @@ func (c *cache) GetItemByName(ctx context.Context, name string) (*item.ItemCache
 	}
 	return &res, nil
 }
+
+func (c *cache) FetchAllItems(ctx context.Context) ([]item.ItemCache, error) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	var res []item.ItemCache
+	for _, i := range c.itemsByID {
+		res = append(res, i)
+	}
+	return res, nil
+}

@@ -36,6 +36,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/recomendation_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sales_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/search_suggest"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sitemap"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_calc_price"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_gift_resolve_profile"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_invoice"
@@ -123,6 +124,8 @@ func main() {
 
 	mux.Route("/v1", func(r1 chi.Router) {
 		r1.Use(mdw.NewUseragent().IdentifyPlatform)
+
+		r1.Get("/sitemap.xml", sitemap.NewHandler(itemCache).Handle())
 
 		r1.Route("/admin", func(r2 chi.Router) {
 			r2.Use(mdw.NewBearerMDW(os.Getenv("ADMIN_SECRET_KEY")).VerifyUser)
