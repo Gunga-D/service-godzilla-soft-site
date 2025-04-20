@@ -10,6 +10,7 @@ import (
 	"github.com/AlekSi/pointer"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 type handler struct {
@@ -46,6 +47,8 @@ func (h *handler) Handle() http.HandlerFunc {
 
 		steamBase64ID, err := h.steamClient.ResolveProfileID(r.Context(), steamID)
 		if err != nil {
+			logger.Get().Log(fmt.Sprintf("❗️ Не получилось получить профиль по ссылке: %s", body.ProfileURL))
+
 			api.Return500("Что-то пошло не так, попробуйте чуть позже", w)
 			return
 		}

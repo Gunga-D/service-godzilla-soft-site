@@ -15,6 +15,7 @@ import (
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
 	collection_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/collection/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/add_review"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_load_codes"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_recalc_price"
@@ -34,6 +35,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/payment_notification"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/popular_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/recomendation_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/reviews"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sales_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/search_suggest"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/sitemap"
@@ -50,6 +52,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/recomendation"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/suggest"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
+	review_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/review/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	voucher_activation "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/activation"
@@ -111,6 +114,8 @@ func main() {
 	orderRepo := order_postgres.NewRepo(postgres)
 	collectionRepo := collection_postgres.NewRepo(postgres)
 
+	reviewRepo := review_postgres.NewRepo(postgres)
+
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
 	c := cors.New(cors.Options{
@@ -157,11 +162,15 @@ func main() {
 		r1.Post("/steam_calc", steam_calc_price.NewHandler().Handle())
 		r1.Post("/steam_invoice", steam_invoice.NewHandler(orderRepo, tinkoffClient).Handle())
 
+		r1.Get("/reviews", reviews.NewHandler(reviewRepo).Handle())
+
 		r1.Route("/", func(r2 chi.Router) {
 			r2.Use(mdw.NewJWT(authJWT).VerifyUser)
 			r2.Post("/check_voucher", check_voucher.NewHandler(itemCache, voucherActivation).Handle())
 			r2.Post("/cart_item", cart_item.NewHandler(codeRepo, itemCache, databusClient).Handle())
 			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, tinkoffClient, databusClient, voucherActivation).Handle())
+
+			r2.Post("/add_review", add_review.NewHandler(reviewRepo).Handle())
 		})
 
 		r1.Route("/steam_gift", func(r2 chi.Router) {
