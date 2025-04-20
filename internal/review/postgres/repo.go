@@ -54,7 +54,7 @@ func (r *repo) AddReview(ctx context.Context, userID *int64, itemID int64, comme
 }
 
 func (r *repo) GetScore(ctx context.Context, itemID int64) (float64, error) {
-	query, args, err := sq.Select("avg(score)").From(`public.review`).
+	query, args, err := sq.Select("COALESCE(avg(score), -1)").From(`public.review`).
 		Where(sq.Eq{"item_id": itemID}).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {

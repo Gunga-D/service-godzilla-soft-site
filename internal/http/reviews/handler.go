@@ -2,9 +2,11 @@ package reviews
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 )
 
@@ -35,9 +37,17 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 		score, err := h.repo.GetScore(r.Context(), itemID)
 		if err != nil {
+			log.Printf("[error] cannot get score: %v\n", err)
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
+		if score == -1 {
+			api.ReturnOK(ReviewsResponse{
+				Score: nil,
+			}, w)
+			return
+		}
+
 		reviews, err := h.repo.FetchCommentReviews(r.Context(), itemID, limit, offset)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
@@ -54,7 +64,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		api.ReturnOK(ReviewsResponse{
-			Score:   Round(score, 2),
+			Score:   pointer.ToFloat64(Round(score, 2)),
 			Reviews: resReviews,
 		}, w)
 	}

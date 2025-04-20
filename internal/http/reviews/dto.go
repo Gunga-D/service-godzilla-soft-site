@@ -1,8 +1,8 @@
 package reviews
 
 type ReviewsResponse struct {
-	Score   float64     `json:"score"`
-	Reviews []ReviewDTO `json:"reviews"`
+	Score   *float64    `json:"score,omitempty"`
+	Reviews []ReviewDTO `json:"reviews,omitempty"`
 }
 
 type ReviewDTO struct {
