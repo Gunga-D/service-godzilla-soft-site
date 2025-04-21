@@ -72,6 +72,7 @@ func (r *repo) GetScore(ctx context.Context, itemID int64) (float64, error) {
 func (r *repo) FetchCommentReviews(ctx context.Context, itemID int64, limit uint64, offset uint64) ([]review.Review, error) {
 	query, args, err := sq.Select("*").From(`public.review`).
 		Where(sq.And{sq.NotEq{"comment": nil}, sq.Eq{"item_id": itemID}}).
+		OrderBy("created_at desc").
 		Limit(limit).Offset(offset).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
