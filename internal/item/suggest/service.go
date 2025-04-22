@@ -117,17 +117,17 @@ func (s *service) Suggest(ctx context.Context, text string) ([]Suggested, error)
 	res := make([]Suggested, 0, len(suggests))
 
 	// Исключения
-	if strings.Contains(normQuery, "бесп") {
-		res = append(res, Suggested{
-			Type: "banner",
-			Banner: &SuggestedBanner{
-				Image: "https://disk.godzillasoft.ru/banner_inzoi_konkurs_1.jpg",
-				Title: "Розыгрыш игры inZOI",
-				URL:   "https://t.me/godzillasoftmedia/46",
-			},
-			Probability: 1.0,
-		})
-	}
+	// if strings.Contains(normQuery, "бесп") {
+	// 	res = append(res, Suggested{
+	// 		Type: "banner",
+	// 		Banner: &SuggestedBanner{
+	// 			Image: "https://disk.godzillasoft.ru/banner_inzoi_konkurs_1.jpg",
+	// 			Title: "Розыгрыш игры inZOI",
+	// 			URL:   "https://t.me/godzillasoftmedia/46",
+	// 		},
+	// 		Probability: 1.0,
+	// 	})
+	// }
 
 	for _, suggest := range suggests {
 		i, err := s.itemCache.GetItemByName(ctx, suggest.Value)
@@ -139,17 +139,8 @@ func (s *service) Suggest(ctx context.Context, text string) ([]Suggested, error)
 		}
 
 		res = append(res, Suggested{
-			Type: "item",
-			Item: &SuggestedItem{
-				ID:           i.ID,
-				CategoryID:   i.CategoryID,
-				Title:        i.Title,
-				CurrentPrice: i.CurrentPrice,
-				IsForSale:    i.IsForSale,
-				OldPrice:     i.OldPrice,
-				ThumbnailURL: i.ThumbnailURL,
-				IsSteamGift:  i.IsSteamGift,
-			},
+			Type:        "item",
+			Item:        i,
 			Probability: suggest.Score,
 		})
 	}

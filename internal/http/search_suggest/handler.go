@@ -47,17 +47,34 @@ func (h *handler) Handle() http.HandlerFunc {
 				if s.Item.IsSteamGift {
 					itemType = "gift"
 				}
+
+				var itemHorizontalImage *string
+				if s.Item.SteamBlock != nil {
+					itemHorizontalImage = pointer.ToString(s.Item.SteamBlock.HeaderImage)
+				}
+				var itemGenres []string
+				if s.Item.SteamBlock != nil {
+					itemGenres = s.Item.SteamBlock.Genres
+				}
+				var itemReleaseDate *string
+				if s.Item.SteamBlock != nil {
+					itemReleaseDate = pointer.ToString(s.Item.SteamBlock.ReleaseDate)
+				}
+
 				res = append(res, SearchSuggestDTO{
-					SuggestType:      s.Type,
-					ItemID:           &s.Item.ID,
-					ItemTitle:        &s.Item.Title,
-					ItemCategoryID:   &s.Item.CategoryID,
-					ItemCurrentPrice: pointer.ToFloat64(float64(s.Item.CurrentPrice) / 100),
-					ItemIsForSale:    &s.Item.IsForSale,
-					ItemOldPrice:     itemOldPrice,
-					ItemThumbnailURL: &s.Item.ThumbnailURL,
-					Probability:      s.Probability,
-					ItemType:         pointer.ToString(itemType),
+					SuggestType:         s.Type,
+					ItemID:              &s.Item.ID,
+					ItemTitle:           &s.Item.Title,
+					ItemCategoryID:      &s.Item.CategoryID,
+					ItemCurrentPrice:    pointer.ToFloat64(float64(s.Item.CurrentPrice) / 100),
+					ItemIsForSale:       &s.Item.IsForSale,
+					ItemOldPrice:        itemOldPrice,
+					ItemThumbnailURL:    &s.Item.ThumbnailURL,
+					Probability:         s.Probability,
+					ItemType:            pointer.ToString(itemType),
+					ItemHorizontalImage: itemHorizontalImage,
+					ItemGenres:          itemGenres,
+					ItemReleaseDate:     itemReleaseDate,
 				})
 			}
 			if s.Type == "banner" {

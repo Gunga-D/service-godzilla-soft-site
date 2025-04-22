@@ -1,9 +1,11 @@
 package suggest
 
+import "github.com/Gunga-D/service-godzilla-soft-site/internal/item"
+
 type Suggested struct {
 	Type        string
 	Banner      *SuggestedBanner
-	Item        *SuggestedItem
+	Item        *item.ItemCache
 	Probability float64
 }
 
@@ -11,15 +13,4 @@ type SuggestedBanner struct {
 	Image string
 	Title string
 	URL   string
-}
-
-type SuggestedItem struct {
-	ID           int64
-	CategoryID   int64
-	Title        string
-	CurrentPrice int64
-	IsForSale    bool
-	OldPrice     *int64
-	ThumbnailURL string
-	IsSteamGift  bool
 }
