@@ -48,8 +48,8 @@ func (h *handler) Handle() http.HandlerFunc {
 					itemType = "gift"
 				}
 
-				var itemHorizontalImage *string
-				if s.Item.SteamBlock != nil {
+				itemHorizontalImage := s.Item.HorizontalImage
+				if itemHorizontalImage == nil && s.Item.SteamBlock != nil {
 					itemHorizontalImage = pointer.ToString(s.Item.SteamBlock.HeaderImage)
 				}
 				var itemGenres []string

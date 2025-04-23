@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/deepseek"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_market"
@@ -42,8 +43,11 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_calc_price"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_gift_resolve_profile"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_invoice"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think_result"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/deepthink"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers"
 	steam_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/steam"
 	yandex_market_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/yandex_market"
@@ -59,6 +63,7 @@ import (
 	voucher_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/service"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/transport/listener"
 	"github.com/go-chi/chi"
@@ -72,6 +77,7 @@ func main() {
 	defer cancel()
 
 	postgres := postgres.Get(ctx)
+	redis := redis.Get(ctx)
 
 	databusClient := databus.NewClient(ctx)
 
@@ -93,6 +99,7 @@ func main() {
 		return
 	}
 	yaMarket := yandex_market.NewClient(os.Getenv("YA_MARKET_API_URL"), os.Getenv("YA_MARKET_AUTH"), int64(yaMarketBusinessID))
+	deepseekClient := deepseek.NewClient(os.Getenv("DEEPSEEK_URL"), os.Getenv("DEEPSEEK_TOKEN"))
 
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemRecommendation := recomendation.NewService(steamClient)
@@ -103,6 +110,8 @@ func main() {
 	go itemCache.StartSync(ctx)
 	itemSuggestSrv := suggest.NewService(itemRepo, itemCache)
 	go itemSuggestSrv.StartSync(ctx)
+	itemThinker := deepthink.NewService(deepseekClient, itemCache, itemRepo, redis)
+	go itemThinker.StartSync(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres)
 	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
@@ -178,6 +187,9 @@ func main() {
 		})
 
 		r1.Post("/payment_notification", payment_notification.NewHandler(os.Getenv("TINKOFF_TERMINAL_KEY"), orderRepo).Handle())
+
+		r1.Post("/think", think.NewHandler(itemThinker).Handle())
+		r1.Post("/think_result", think_result.NewHandler(itemThinker).Handle())
 	})
 
 	log.Println("[info] server start up")
