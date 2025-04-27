@@ -63,17 +63,34 @@ func (h *handler) Handle() http.HandlerFunc {
 			if i.IsSteamGift {
 				itemType = "gift"
 			}
+
+			horizontalImage := i.HorizontalImage
+			if horizontalImage == nil && i.SteamBlock != nil {
+				horizontalImage = pointer.ToString(i.SteamBlock.HeaderImage)
+			}
+			var releaseDate *string
+			if i.SteamBlock != nil {
+				releaseDate = pointer.ToString(i.SteamBlock.ReleaseDate)
+			}
+			var genres []string
+			if i.SteamBlock != nil {
+				genres = i.SteamBlock.Genres
+			}
+
 			res = append(res, CollectionItemDTO{
-				ID:           i.ID,
-				Title:        i.Title,
-				CategoryID:   i.CategoryID,
-				Platform:     i.Platform,
-				Region:       i.Region,
-				CurrentPrice: float64(i.CurrentPrice) / 100,
-				IsForSale:    i.IsForSale,
-				OldPrice:     oldPrice,
-				ThumbnailURL: i.ThumbnailURL,
-				Type:         itemType,
+				ID:                 i.ID,
+				Title:              i.Title,
+				CategoryID:         i.CategoryID,
+				Platform:           i.Platform,
+				Region:             i.Region,
+				CurrentPrice:       float64(i.CurrentPrice) / 100,
+				IsForSale:          i.IsForSale,
+				OldPrice:           oldPrice,
+				ThumbnailURL:       i.ThumbnailURL,
+				HorizontalImageURL: horizontalImage,
+				Type:               itemType,
+				ReleaseDate:        releaseDate,
+				Genres:             genres,
 			})
 		}
 
