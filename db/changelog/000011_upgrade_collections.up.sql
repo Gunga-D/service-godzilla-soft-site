@@ -1,0 +1,1 @@
+alter table public.collection add column header_image text;

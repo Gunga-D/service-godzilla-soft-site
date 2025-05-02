@@ -37,6 +37,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			Name:            coll.Name,
 			Description:     coll.Description,
 			BackgroundImage: coll.BackgroundImage,
+			HeaderImage:     coll.HeaderImage,
 		}, w)
 	}
 }

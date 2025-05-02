@@ -8,6 +8,7 @@ type Collection struct {
 	Name            string     `db:"name"`
 	Description     string     `db:"description"`
 	BackgroundImage string     `db:"background_image"`
+	HeaderImage     *string    `db:"header_image"`
 	CreatedAt       *time.Time `db:"created_at"`
 	UpdatedAt       *time.Time `db:"updated_at"`
 }
