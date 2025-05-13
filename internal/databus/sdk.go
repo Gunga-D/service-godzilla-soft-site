@@ -16,8 +16,9 @@ func NewClient(ctx context.Context) *client {
 	return &client{
 		amqp: amqp.Get(ctx, []string{
 			"queue-item-change-item-state",
-			"queue-quick-user-registration",
+			"queue-new-user-email",
 			"queue-send-to-email",
+			"queue-new-user-steam-link",
 		}),
 	}
 }
@@ -33,12 +34,12 @@ func (c *client) PublishDatabusChangeItemState(ctx context.Context, msg ChangeIt
 	})
 }
 
-func (c *client) PublishDatabusQuickUserRegistration(ctx context.Context, msg QuickUserRegistrationDTO) error {
+func (c *client) PublishDatabusNewUserEmail(ctx context.Context, msg NewUserEmailDTO) error {
 	raw, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}
-	return c.amqp.PublishWithContext(ctx, "", "queue-quick-user-registration", true, false, sdk_amqp.Publishing{
+	return c.amqp.PublishWithContext(ctx, "", "queue-new-user-email", true, false, sdk_amqp.Publishing{
 		ContentType: "application/json",
 		Body:        raw,
 	})
@@ -55,14 +56,29 @@ func (c *client) PublishDatabusSendToEmail(ctx context.Context, msg SendToEmailD
 	})
 }
 
+func (c *client) PublishDatabusNewUserSteamLink(ctx context.Context, msg NewUserSteamLinkDTO) error {
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return c.amqp.PublishWithContext(ctx, "", "queue-new-user-steam-link", true, false, sdk_amqp.Publishing{
+		ContentType: "application/json",
+		Body:        raw,
+	})
+}
+
 func (c *client) ConsumeDatabusChangeItemState(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-item-change-item-state", "", false, false, false, false, nil)
 }
 
-func (c *client) ConsumeDatabusQuickUserRegistration(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
-	return c.amqp.ConsumeWithContext(ctx, "queue-quick-user-registration", "", false, false, false, false, nil)
+func (c *client) ConsumeDatabusNewUserEmail(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-new-user-email", "", false, false, false, false, nil)
 }
 
 func (c *client) ConsumeDatabusSendToEmail(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-send-to-email", "", false, false, false, false, nil)
+}
+
+func (c *client) ConsumeDatabusNewUserSteamLink(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-new-user-steam-link", "", false, false, false, false, nil)
 }

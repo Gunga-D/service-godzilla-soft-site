@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/AlekSi/pointer"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
@@ -39,8 +40,8 @@ func (h *handler) Handle() http.HandlerFunc {
 		}
 
 		userID, err := h.userRepo.CreateUser(r.Context(), user.User{
-			Email:    req.Email,
-			Password: auth.GeneratePassword(r.Context(), req.Password),
+			Email:    pointer.ToString(req.Email),
+			Password: pointer.ToString(auth.GeneratePassword(r.Context(), req.Password)),
 		})
 		if err != nil {
 			if errors.Is(err, errDuplicateKey) {
@@ -51,7 +52,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		accessToken, err := h.jwtService.GenerateToken(userID, req.Email)
+		accessToken, err := h.jwtService.GenerateToken(userID, &req.Email)
 		if err != nil {
 			api.Return500("Неизвестная ошибка", w)
 			return

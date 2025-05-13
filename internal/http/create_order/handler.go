@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
@@ -18,26 +19,26 @@ import (
 )
 
 type handler struct {
-	itemGetter              itemGetter
-	orderCreator            orderCreator
-	tinkoffClient           tinkoff.Client
-	userRegistrationDatabus userRegistrationDatabus
-	voucherActivation       voucherActivation
+	itemGetter        itemGetter
+	orderCreator      orderCreator
+	tinkoffClient     tinkoff.Client
+	userDatabus       userDatabus
+	voucherActivation voucherActivation
 }
 
 func NewHandler(itemGetter itemGetter,
 	orderCreator orderCreator,
 	tinkoffClient tinkoff.Client,
-	userRegistrationDatabus userRegistrationDatabus,
+	userDatabus userDatabus,
 	voucherActivation voucherActivation,
 ) *handler {
 
 	return &handler{
-		itemGetter:              itemGetter,
-		orderCreator:            orderCreator,
-		tinkoffClient:           tinkoffClient,
-		userRegistrationDatabus: userRegistrationDatabus,
-		voucherActivation:       voucherActivation,
+		itemGetter:        itemGetter,
+		orderCreator:      orderCreator,
+		tinkoffClient:     tinkoffClient,
+		userDatabus:       userDatabus,
+		voucherActivation: voucherActivation,
 	}
 }
 
@@ -79,6 +80,20 @@ func (h *handler) Handle() http.HandlerFunc {
 				api.Return400("Для товара \"Steam gift\" поле Steam профиль обязательно для заполнения", w)
 				return
 			}
+			if _, err := url.Parse(*body.SteamProfile); err != nil {
+				api.Return400("Некорректная ссылка на Steam профиль, исправьте ее и попробуйте еще раз", w)
+				return
+			}
+			if userID, ok := r.Context().Value(user.MetaUserIDKey{}).(int64); ok {
+				err = h.userDatabus.PublishDatabusNewUserSteamLink(r.Context(), databus.NewUserSteamLinkDTO{
+					UserID:    userID,
+					SteamLink: *body.SteamProfile,
+				})
+				if err != nil {
+					api.Return500("Непредвиденная ошибка при привязке Стим ссылки к профилю", w)
+					return
+				}
+			}
 
 			giftOrderID, err := h.orderCreator.CreateItemGiftOrder(r.Context(), *body.SteamProfile, currentPrice, item.ID)
 			if err != nil {
@@ -89,32 +104,29 @@ func (h *handler) Handle() http.HandlerFunc {
 			orderID = giftOrderID
 		} else {
 			// Флоу для ключа
-			var userEmail string
-			if body.Email != nil {
-				userEmail = *body.Email
-
-				if ok := auth.ValidateEmail(userEmail); !ok {
-					api.Return400("Некорректная почта, исправьте ее и попробуйте еще раз", w)
-					return
-				}
-
-				err = h.userRegistrationDatabus.PublishDatabusQuickUserRegistration(r.Context(), databus.QuickUserRegistrationDTO{
-					Email: userEmail,
-				})
-				if err != nil {
-					api.Return500("Непредвиденная ошибка во время быстрой регистрации пользователя", w)
-					return
-				}
-			} else {
-				email, ok := r.Context().Value(user.MetaUserEmailKey{}).(string)
-				if !ok {
-					api.Return401("Ошибка авторизации", w)
-					return
-				}
-				userEmail = email
+			if body.Email == nil {
+				api.Return400("Почта обязательный параметр для покупки ключа Steam", w)
+				return
+			}
+			if ok := auth.ValidateEmail(*body.Email); !ok {
+				api.Return400("Некорректная почта, исправьте ее и попробуйте еще раз", w)
+				return
 			}
 
-			cdkeyOrderID, err := h.orderCreator.CreateItemOrder(r.Context(), userEmail, currentPrice, item.ID, item.Slip)
+			var userID *int64
+			if v, ok := r.Context().Value(user.MetaUserIDKey{}).(int64); ok {
+				userID = &v
+			}
+			err = h.userDatabus.PublishDatabusNewUserEmail(r.Context(), databus.NewUserEmailDTO{
+				Email:  *body.Email,
+				UserID: userID,
+			})
+			if err != nil {
+				api.Return500("Непредвиденная ошибка во время быстрой регистрации пользователя", w)
+				return
+			}
+
+			cdkeyOrderID, err := h.orderCreator.CreateItemOrder(r.Context(), *body.Email, currentPrice, item.ID, item.Slip)
 			if err != nil {
 				log.Printf("[error] create order: %v", err)
 

@@ -1,4 +1,4 @@
-package quick_user_registration
+package new_user_email
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 type userRepo interface {
 	CreateUser(ctx context.Context, usr user.User) (int64, error)
 	GetUserByEmail(ctx context.Context, email string) (*user.User, error)
+	AssignEmailToUser(ctx context.Context, userID int64, email string) error
 }
 
 type sendToEmailDatabus interface {

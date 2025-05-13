@@ -16,8 +16,9 @@ type orderCreator interface {
 	CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64) (string, error)
 }
 
-type userRegistrationDatabus interface {
-	PublishDatabusQuickUserRegistration(ctx context.Context, msg databus.QuickUserRegistrationDTO) error
+type userDatabus interface {
+	PublishDatabusNewUserEmail(ctx context.Context, msg databus.NewUserEmailDTO) error
+	PublishDatabusNewUserSteamLink(ctx context.Context, msg databus.NewUserSteamLinkDTO) error
 }
 
 type voucherActivation interface {

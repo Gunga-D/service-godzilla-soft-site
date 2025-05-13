@@ -40,7 +40,10 @@ func (m *jwtMDW) VerifyUser(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		ctxWithUserID := context.WithValue(r.Context(), user.MetaUserIDKey{}, userID)
-		next.ServeHTTP(w, r.WithContext(context.WithValue(ctxWithUserID, user.MetaUserEmailKey{}, userEmail)))
+		ctx := context.WithValue(r.Context(), user.MetaUserIDKey{}, userID)
+		if userEmail != nil {
+			ctx = context.WithValue(ctx, user.MetaUserEmailKey{}, userEmail)
+		}
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

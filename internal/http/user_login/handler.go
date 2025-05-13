@@ -37,8 +37,12 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return404("Пользователь не найден", w)
 			return
 		}
+		if usr.Password == nil {
+			api.Return400("Пароль не задан", w)
+			return
+		}
 
-		if ok := auth.ValidatePassword(r.Context(), usr.Password, req.Password); !ok {
+		if ok := auth.ValidatePassword(r.Context(), *usr.Password, req.Password); !ok {
 			api.Return400("Пароль или почта введены некорректно", w)
 			return
 		}

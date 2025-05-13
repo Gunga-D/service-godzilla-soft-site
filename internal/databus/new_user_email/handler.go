@@ -1,4 +1,4 @@
-package quick_user_registration
+package new_user_email
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"text/template"
 
+	"github.com/AlekSi/pointer"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
@@ -37,20 +38,35 @@ func NewHandler(consumer databus.Consumer, userRepo userRepo,
 }
 
 func (h *handler) Consume(ctx context.Context) {
-	msgs, err := h.consumer.ConsumeDatabusQuickUserRegistration(ctx)
+	msgs, err := h.consumer.ConsumeDatabusNewUserEmail(ctx)
 	if err != nil {
-		log.Fatalf("cannot start consume databus change item state: %v", err)
+		log.Fatalf("cannot start consume databus new user email: %v", err)
 	}
 	for msg := range msgs {
-		var data databus.QuickUserRegistrationDTO
+		var data databus.NewUserEmailDTO
 		json.Unmarshal(msg.Body, &data)
 
-		log.Printf("[info] user %s quick register to system\n", data.Email)
+		if data.UserID != nil {
+			log.Printf("[info] new user email %s for %d\n", data.Email, *data.UserID)
+		} else {
+			log.Printf("[info] new user email %s without userid\n", data.Email)
+		}
 
 		usr, err := h.userRepo.GetUserByEmail(ctx, data.Email)
 		if err != nil {
-			log.Printf("[error] cannot get user by email: %v\n", err)
+			log.Printf("[error] cannot get user by email - %s: %v\n", data.Email, err)
 			msg.Nack(false, true)
+			continue
+		}
+		if usr == nil && data.UserID != nil {
+			err = h.userRepo.AssignEmailToUser(ctx, *data.UserID, data.Email)
+			if err != nil {
+				log.Printf("[error] cannot assign email to user - %d: %v\n", *data.UserID, err)
+				msg.Nack(false, true)
+				continue
+			}
+			log.Printf("[info] assign email %s to user %d\n", data.Email, *data.UserID)
+			msg.Ack(false)
 			continue
 		}
 		if usr != nil {
@@ -71,14 +87,15 @@ func (h *handler) Consume(ctx context.Context) {
 		}
 
 		_, err = h.userRepo.CreateUser(ctx, user.User{
-			Email:    data.Email,
-			Password: auth.GeneratePassword(ctx, newPwd),
+			Email:    pointer.ToString(data.Email),
+			Password: pointer.ToString(auth.GeneratePassword(ctx, newPwd)),
 		})
 		if err != nil {
 			log.Printf("[error] cannot create user: %v\n", err)
 			msg.Nack(false, true)
 			continue
 		}
+		log.Printf("[info] create user with email %s\n", data.Email)
 
 		err = h.sendToEmailDatabus.PublishDatabusSendToEmail(ctx, databus.SendToEmailDTO{
 			Email:   data.Email,

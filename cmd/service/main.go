@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/deepseek"
@@ -43,9 +44,12 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_calc_price"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_gift_resolve_profile"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/steam_invoice"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/telegram_sign_in"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think_result"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_change_password"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_profile"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/deepthink"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers"
@@ -101,6 +105,11 @@ func main() {
 	yaMarket := yandex_market.NewClient(os.Getenv("YA_MARKET_API_URL"), os.Getenv("YA_MARKET_AUTH"), int64(yaMarketBusinessID))
 	deepseekClient := deepseek.NewClient(os.Getenv("DEEPSEEK_URL"), os.Getenv("DEEPSEEK_TOKEN"))
 
+	changePasswordTemplate, err := template.ParseFiles("assets/change-password-template.html")
+	if err != nil {
+		log.Fatalln("failed loading html templates")
+	}
+
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemRecommendation := recomendation.NewService(steamClient)
 	itemCache := item_cache.NewCache(itemRepo, []fillers.Filler{
@@ -113,7 +122,7 @@ func main() {
 	itemThinker := deepthink.NewService(deepseekClient, itemCache, itemRepo, redis)
 	go itemThinker.StartSync(ctx)
 
-	userRepo := user_postgres.NewRepo(postgres)
+	userRepo := user_postgres.NewRepo(postgres, redis)
 	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
 
 	voucherRepo := voucher_postgres.NewRepo(postgres)
@@ -155,6 +164,8 @@ func main() {
 		r1.Post("/search_suggest", search_suggest.NewHandler(itemSuggestSrv).Handle())
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
+		r1.Post("/user_change_password", user_change_password.NewHandler(userRepo, changePasswordTemplate, databusClient).Handle())
+		r1.Post("/telegram_sign_in", telegram_sign_in.NewHandler(authJWT, userRepo, os.Getenv("TELEGRAM_LOGIN_WIDGET_BOT_TOKEN")).Handle())
 
 		r1.Get("/collections", fetch_collections.NewHandler(collectionRepo).Handle())
 		r1.Get("/collection_items", fetch_collection_items.NewHandler(itemCache, collectionRepo).Handle())
@@ -180,6 +191,8 @@ func main() {
 			r2.Post("/create_order", create_order.NewHandler(itemCache, orderRepo, tinkoffClient, databusClient, voucherActivation).Handle())
 
 			r2.Post("/add_review", add_review.NewHandler(reviewRepo).Handle())
+
+			r2.Get("/user_profile", user_profile.NewHandler(redis, userRepo).Handle())
 		})
 
 		r1.Route("/steam_gift", func(r2 chi.Router) {
