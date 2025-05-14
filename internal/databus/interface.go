@@ -11,4 +11,5 @@ type Consumer interface {
 	ConsumeDatabusNewUserEmail(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
 	ConsumeDatabusSendToEmail(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
 	ConsumeDatabusNewUserSteamLink(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
+	ConsumeDatabusNeuroTask(ctx context.Context) (<-chan sdk_amqp.Delivery, error)
 }

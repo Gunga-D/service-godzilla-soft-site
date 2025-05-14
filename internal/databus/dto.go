@@ -20,3 +20,8 @@ type NewUserSteamLinkDTO struct {
 	UserID    int64  `json:"user_id"`
 	SteamLink string `json:"steam_link"`
 }
+
+type NeuroTaskDTO struct {
+	ID    string `json:"id"`
+	Query string `json:"query"`
+}

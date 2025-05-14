@@ -19,6 +19,7 @@ func NewClient(ctx context.Context) *client {
 			"queue-new-user-email",
 			"queue-send-to-email",
 			"queue-new-user-steam-link",
+			"queue-neuro-task",
 		}),
 	}
 }
@@ -67,6 +68,17 @@ func (c *client) PublishDatabusNewUserSteamLink(ctx context.Context, msg NewUser
 	})
 }
 
+func (c *client) PublishDatabusNeuroTask(ctx context.Context, msg NeuroTaskDTO) error {
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return c.amqp.PublishWithContext(ctx, "", "queue-neuro-task", true, false, sdk_amqp.Publishing{
+		ContentType: "application/json",
+		Body:        raw,
+	})
+}
+
 func (c *client) ConsumeDatabusChangeItemState(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-item-change-item-state", "", false, false, false, false, nil)
 }
@@ -81,4 +93,8 @@ func (c *client) ConsumeDatabusSendToEmail(ctx context.Context) (<-chan sdk_amqp
 
 func (c *client) ConsumeDatabusNewUserSteamLink(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-new-user-steam-link", "", false, false, false, false, nil)
+}
+
+func (c *client) ConsumeDatabusNeuroTask(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-neuro-task", "", false, false, false, false, nil)
 }

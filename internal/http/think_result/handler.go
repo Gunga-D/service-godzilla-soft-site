@@ -8,12 +8,12 @@ import (
 )
 
 type handler struct {
-	thinker thinker
+	neuroCache neuroCache
 }
 
-func NewHandler(thinker thinker) *handler {
+func NewHandler(neuroCache neuroCache) *handler {
 	return &handler{
-		thinker: thinker,
+		neuroCache: neuroCache,
 	}
 }
 
@@ -25,17 +25,30 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
-		res, err := h.thinker.GetThinkingResult(r.Context(), body.ID)
+		taskRes, err := h.neuroCache.GetTaskResult(r.Context(), body.ID)
 		if err != nil {
 			api.Return500("Непредвиденная ошибка", w)
 			return
 		}
-		if res == nil {
+		if taskRes == nil {
 			api.Return404("Еще не обработана", w)
 			return
 		}
-		items := make([]ItemDTO, 0, len(res.Items))
-		for _, i := range res.Items {
+
+		if !taskRes.Success || taskRes.Data == nil {
+			if taskRes.Message != nil {
+				api.ReturnOK(ThinkResultResponse{
+					Reflection: *taskRes.Message,
+					Items:      []ItemDTO{},
+				}, w)
+				return
+			}
+			api.Return500("Непредвиденная ошибка", w)
+			return
+		}
+
+		items := make([]ItemDTO, 0, len(taskRes.Data.Items))
+		for _, i := range taskRes.Data.Items {
 			itemType := "cdkey"
 			if i.IsSteamGift {
 				itemType = "gift"
@@ -67,7 +80,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			})
 		}
 		api.ReturnOK(ThinkResultResponse{
-			Reflection: res.Reflection,
+			Reflection: taskRes.Data.Reflection,
 			Items:      items,
 		}, w)
 	}

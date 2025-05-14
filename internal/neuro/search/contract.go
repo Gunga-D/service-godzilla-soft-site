@@ -1,4 +1,4 @@
-package deepthink
+package search
 
 import (
 	"context"

@@ -1,26 +1,23 @@
-package deepthink
+package search
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/AlekSi/pointer"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/deepseek"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/neuro"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
-	redigo "github.com/gomodule/redigo/redis"
-	"github.com/google/uuid"
 )
 
 const (
-	limit             = 50
-	promptTemplate    = "У тебя есть следующий список игр:\n%s. Подбери самые лучшие игры по запросу пользователя из данного списка и верни ответ в следующем формате (строго соблюдай данный формат, ты можешь отвечать только в квадратных скобках): [твои мысли об игре без упоминания их id] | [id игр с разделительным символом точка с запятой]"
-	thinkingResultKey = "thinking_result:%s"
+	limit          = 50
+	promptTemplate = "У тебя есть следующий список игр:\n%s. Подбери самые лучшие игры по запросу пользователя из данного списка и верни ответ в следующем формате (строго соблюдай данный формат, ты можешь отвечать только в квадратных скобках): [твои мысли об игре без упоминания их id] | [id игр с разделительным символом точка с запятой]. При этом если запрос не по видеоигровой тематике, то просто в указанном формате ответь, что не знаешь."
 )
 
 type service struct {
@@ -91,29 +88,7 @@ func (s *service) sync(ctx context.Context) error {
 	return nil
 }
 
-func (s *service) StartThinking(ctx context.Context, query string) string {
-	id := uuid.NewString()
-	go s.think(context.Background(), id, query)
-	return id
-}
-
-func (s *service) GetThinkingResult(ctx context.Context, id string) (*ThinkResult, error) {
-	raw, err := redigo.Bytes(s.redis.Get(ctx, fmt.Sprintf(thinkingResultKey, id)))
-	if err != nil {
-		if err == redigo.ErrNil {
-			return nil, nil
-		}
-	}
-	var res ThinkResult
-	err = json.Unmarshal(raw, &res)
-	if err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (s *service) think(ctx context.Context, id string, query string) error {
-	log.Printf("[info] Промпт на генерацию: %s\n\nЗапрос: %s\n", s.currentPrompt, query)
+func (s *service) Search(ctx context.Context, id string, query string) neuro.TaskResult {
 	resp, err := s.deepseekClient.Completions(ctx, deepseek.CompletionsRequest{
 		Model: "deepseek-chat",
 		Messages: []deepseek.MessageDTO{
@@ -129,20 +104,27 @@ func (s *service) think(ctx context.Context, id string, query string) error {
 		Stream: false,
 	})
 	if err != nil {
-		return err
+		return neuro.TaskResult{
+			Success: false,
+			Message: pointer.ToString("К сожалению, что-то пошло не так, попробуйте чуть позже"),
+		}
 	}
 	if len(resp.Choices) == 0 {
-		log.Printf("[error] no deepseek choices\n")
-		return errors.New("no answer")
-	}
-	log.Printf("[info] Результат обработки: %s\n", resp.Choices[0].Message.Content)
-	contentFields := strings.Split(resp.Choices[0].Message.Content, " | ")
-	if len(contentFields) != 2 {
-		log.Printf("[error] contentFields != 2\n")
-		return errors.New("invalid answer")
+		return neuro.TaskResult{
+			Success: false,
+			Message: pointer.ToString("К сожалению, я не знаю, как правильно ответить на ваш запрос, попробуйте его переформулировать"),
+		}
 	}
 
-	var items []item.ItemCache
+	contentFields := strings.Split(resp.Choices[0].Message.Content, " | ")
+	if len(contentFields) != 2 {
+		return neuro.TaskResult{
+			Success: false,
+			Message: pointer.ToString("К сожалению, я не знаю, как правильно ответить на ваш запрос, попробуйте его переформулировать"),
+		}
+	}
+
+	ndItems := make(map[int64]item.ItemCache)
 	for _, rawItemID := range strings.Split(strings.ReplaceAll(strings.ReplaceAll(contentFields[1], "[", ""), "]", ""), ";") {
 		itemID, err := strconv.ParseInt(rawItemID, 10, 64)
 		if err != nil {
@@ -155,21 +137,19 @@ func (s *service) think(ctx context.Context, id string, query string) error {
 		if cacheItem == nil {
 			continue
 		}
-		items = append(items, *cacheItem)
+		ndItems[itemID] = *cacheItem
+	}
+	var items []item.ItemCache
+	for _, i := range ndItems {
+		items = append(items, i)
 	}
 
-	thinkingResRaw, err := json.Marshal(ThinkResult{
-		Reflection: strings.ReplaceAll(strings.ReplaceAll(contentFields[0], "[", ""), "]", ""),
-		Items:      items,
-	})
-	if err != nil {
-		log.Printf("[error] cannot marshal: %v\n", err)
-		return err
+	return neuro.TaskResult{
+		Success: true,
+		Data: &neuro.TaskResultData{
+			Raw:        resp.Choices[0].Message.Content,
+			Reflection: strings.ReplaceAll(strings.ReplaceAll(contentFields[0], "[", ""), "]", ""),
+			Items:      items,
+		},
 	}
-	err = s.redis.Set(ctx, fmt.Sprintf(thinkingResultKey, id), thinkingResRaw, nil)
-	if err != nil {
-		log.Printf("[error] cannot set thinking result to redis: %v\n", err)
-		return err
-	}
-	return nil
 }

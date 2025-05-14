@@ -17,6 +17,7 @@ import (
 	code_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/code/postgres"
 	collection_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/collection/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/neuro_task"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/add_review"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_create_item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/admin_load_codes"
@@ -51,7 +52,6 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_profile"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_register"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/deepthink"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers"
 	steam_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/steam"
 	yandex_market_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/yandex_market"
@@ -59,6 +59,9 @@ import (
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/recomendation"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/suggest"
+	neuro_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/postgres"
+	neuro_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/redis"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/search"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	review_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/review/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
@@ -111,16 +114,18 @@ func main() {
 	}
 
 	itemRepo := item_postgres.NewRepo(postgres)
+	neuroRepo := neuro_postgres.NewRepo(postgres)
 	itemRecommendation := recomendation.NewService(steamClient)
 	itemCache := item_cache.NewCache(itemRepo, []fillers.Filler{
 		yandex_market_filler.NewFiller(yaMarket),
 		steam_filler.NewFiller(steamClient),
 	}, itemRecommendation)
+	neuroCache := neuro_redis.NewRepo(redis)
 	go itemCache.StartSync(ctx)
 	itemSuggestSrv := suggest.NewService(itemRepo, itemCache)
 	go itemSuggestSrv.StartSync(ctx)
-	itemThinker := deepthink.NewService(deepseekClient, itemCache, itemRepo, redis)
-	go itemThinker.StartSync(ctx)
+	neuroSearch := search.NewService(deepseekClient, itemCache, itemRepo, redis)
+	go neuroSearch.StartSync(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres, redis)
 	authJWT := auth.NewJwtService(os.Getenv("JWT_SECRET_KEY"))
@@ -201,9 +206,14 @@ func main() {
 
 		r1.Post("/payment_notification", payment_notification.NewHandler(os.Getenv("TINKOFF_TERMINAL_KEY"), orderRepo).Handle())
 
-		r1.Post("/think", think.NewHandler(itemThinker).Handle())
-		r1.Post("/think_result", think_result.NewHandler(itemThinker).Handle())
+		r1.Post("/think", think.NewHandler(databusClient).Handle())
+		r1.Post("/think_result", think_result.NewHandler(neuroCache).Handle())
 	})
+
+	// Не могу вынести в отдельный воркер, так как Стим может забанить айпишник из-за neuroSearch, которому необходим itemCache
+	// TODO: после переноса стим данных в postgres репу перенести данный функционал в отдельный воркер
+	log.Println("start consume neuro task databus")
+	go neuro_task.NewHandler(databusClient, neuroSearch, neuroCache, neuroRepo).Consume(ctx)
 
 	log.Println("[info] server start up")
 	err = service.Listen(ctx, listener.NewHTTP(), mux)
