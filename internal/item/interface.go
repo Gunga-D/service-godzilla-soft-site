@@ -9,6 +9,7 @@ import (
 type WriteRepository interface {
 	CreateItem(ctx context.Context, i Item) (int64, error)
 	UpdatePrice(ctx context.Context, itemID int64, currentPrice int64, limitPrice int64, priceLoc string) error
+	UpdateSteamRawData(ctx context.Context, itemID int64, steamRawData string) error
 }
 
 type ReadRepository interface {

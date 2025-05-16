@@ -1,0 +1,1 @@
+alter table public.item add column steam_raw_data text;

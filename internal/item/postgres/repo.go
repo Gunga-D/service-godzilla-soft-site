@@ -180,3 +180,19 @@ func (r *repo) UpdatePrice(ctx context.Context, itemID int64, currentPrice int64
 	_, err = r.db.ExecContext(ctx, query, args...)
 	return err
 }
+
+func (r *repo) UpdateSteamRawData(ctx context.Context, itemID int64, steamRawData string) error {
+	q := sq.Update("item").
+		Where(sq.Eq{"id": itemID}).
+		Set("steam_raw_data", steamRawData)
+
+	query, args, err := q.
+		PlaceholderFormat(sq.Dollar).ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.ExecContext(ctx, query, args...)
+	return err
+}

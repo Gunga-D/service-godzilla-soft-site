@@ -36,6 +36,7 @@ type Item struct {
 	Unavailable     bool      `db:"unavailable"`
 	HorizontalImage *string   `db:"horizontal_image"`
 	VerticalImage   *string   `db:"vertical_image"`
+	SteamRawData    *string   `db:"steam_raw_data"`
 	CreatedAt       time.Time `db:"created_at"`
 	UpdatedAt       time.Time `db:"updated_at"`
 }

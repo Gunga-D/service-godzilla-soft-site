@@ -2,29 +2,32 @@ package steam
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"log"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 )
 
-type filler struct {
-	steamClient steam.Client
-}
+type filler struct{}
 
-func NewFiller(steamClient steam.Client) *filler {
-	return &filler{
-		steamClient: steamClient,
-	}
+func NewFiller() *filler {
+	return &filler{}
 }
 
 func (f *filler) Fill(ctx context.Context, items []item.ItemCache) error {
 	for idx := 0; idx < len(items); idx++ {
 		v := items[idx]
-		if v.SteamAppID != nil {
-			res, err := f.steamClient.AppDetails(ctx, *v.SteamAppID)
+		if v.SteamRawData != nil && v.SteamAppID != nil {
+			rawData, err := base64.StdEncoding.DecodeString(*v.SteamRawData)
 			if err != nil {
-				log.Printf("cannot get app details of %d: %v", *v.SteamAppID, err)
+				log.Printf("cannot decode steam app details of %d: %v", *v.SteamAppID, err)
+				continue
+			}
+			var res steam.AppDetails
+			if err := json.Unmarshal(rawData, &res); err != nil {
+				log.Printf("cannot unmarshal steam app details of %d: %v", *v.SteamAppID, err)
 				continue
 			}
 

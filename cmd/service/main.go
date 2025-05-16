@@ -118,7 +118,7 @@ func main() {
 	itemRecommendation := recomendation.NewService(steamClient)
 	itemCache := item_cache.NewCache(itemRepo, []fillers.Filler{
 		yandex_market_filler.NewFiller(yaMarket),
-		steam_filler.NewFiller(steamClient),
+		steam_filler.NewFiller(),
 	}, itemRecommendation)
 	neuroCache := neuro_redis.NewRepo(redis)
 	go itemCache.StartSync(ctx)
