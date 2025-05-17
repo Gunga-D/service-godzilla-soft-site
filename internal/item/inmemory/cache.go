@@ -124,7 +124,7 @@ func (c *cache) StartSync(ctx context.Context) {
 		log.Fatalf("[error] failed to sync items: %v\n", err)
 	}
 
-	t := time.NewTicker(24 * time.Hour)
+	t := time.NewTicker(time.Hour)
 	for {
 		select {
 		case <-ctx.Done():

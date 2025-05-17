@@ -38,7 +38,7 @@ func NewHandler(itemsRepo item.Repository, deepseekClient deepseek.Client, steam
 }
 
 func (h *handler) Consume(ctx context.Context) {
-	msgs, err := h.consumer.ConsumeDatabusNeuroTask(ctx)
+	msgs, err := h.consumer.ConsumeDatabusNeuroNewItems(ctx)
 	if err != nil {
 		log.Fatalf("cannot start consume databus neuro task: %v", err)
 	}
@@ -113,7 +113,7 @@ func (h *handler) Consume(ctx context.Context) {
 			}
 
 			if appDetails.PriceOverview.Final == 0 {
-				log.Printf("neuro new items: skip steam appName - %s cause game is free: %v\n", appName, err)
+				log.Printf("neuro new items: skip steam appName - %s cause game is free:\n", appName)
 				continue
 			}
 			kzInRubPrice := float64(appDetails.PriceOverview.Final) / rateKztToRub
