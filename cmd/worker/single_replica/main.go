@@ -5,14 +5,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"text/template"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/deepseek"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_market"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/change_item_state"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/neuro_new_items"
@@ -22,7 +20,6 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/send_to_email"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers"
 	steam_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/steam"
-	yandex_market_filler "github.com/Gunga-D/service-godzilla-soft-site/internal/item/fillers/yandex_market"
 	item_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/item/inmemory"
 	item_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/item/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item/recomendation"
@@ -53,18 +50,12 @@ func main() {
 	yandexMailClient := yandex_mail.NewClient(os.Getenv("YANDEX_MAIL_ADDRESS"),
 		os.Getenv("YANDEX_MAIL_LOGIN"),
 		os.Getenv("YANDEX_MAIL_PASSWORD"))
-	yaMarketBusinessID, err := strconv.Atoi(os.Getenv("YA_MARKET_BUSINESS_ID"))
-	if err != nil {
-		log.Printf("[error] cant get yander marker business id: %v", err)
-		return
-	}
-	yaMarket := yandex_market.NewClient(os.Getenv("YA_MARKET_API_URL"), os.Getenv("YA_MARKET_AUTH"), int64(yaMarketBusinessID))
 
 	itemRecommendation := recomendation.NewService(steamClient)
 	itemCache := item_cache.NewCache(itemRepo, []fillers.Filler{
-		yandex_market_filler.NewFiller(yaMarket),
 		steam_filler.NewFiller(),
 	}, itemRecommendation)
+	go itemCache.StartSync(ctx)
 
 	neuroSearch := search.NewService(deepseekClient, itemCache, itemRepo)
 	go neuroSearch.StartSync(ctx)
