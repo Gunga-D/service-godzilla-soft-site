@@ -30,10 +30,21 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 			"current_price",
 			"is_for_sale",
 			"old_price",
+			"limit_price",
 			"thumbnail_url",
 			"background_url",
 			"status",
 			"slip",
+			"is_steam_gift",
+			"yandex_id",
+			"steam_app_id",
+			"price_loc",
+			"popular",
+			"new",
+			"unavailable",
+			"horizontal_image",
+			"vertical_image",
+			"steam_raw_data",
 			"created_at",
 			"updated_at",
 		).Values(
@@ -45,10 +56,21 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 		i.CurrentPrice,
 		i.IsForSale,
 		i.OldPrice,
+		i.LimitPrice,
 		i.ThumbnailURL,
 		i.BackgroundURL,
 		i.Status,
 		i.Slip,
+		i.IsSteamGift,
+		i.YandexID,
+		i.SteamAppID,
+		i.PriceLoc,
+		i.Popular,
+		i.New,
+		i.Unavailable,
+		i.HorizontalImage,
+		i.VerticalImage,
+		i.SteamRawData,
 		time.Now(),
 		time.Now(),
 	)
@@ -89,6 +111,25 @@ func (r *repo) ChangeItemState(ctx context.Context, itemID int64, status string)
 func (r *repo) GetItemByID(ctx context.Context, id int64) (*item.Item, error) {
 	query, args, err := sq.Select("*").From(`public.item`).
 		Where(sq.Eq{"id": id}).
+		Limit(1).
+		PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []item.Item
+	if err := r.db.SelectContext(ctx, &res, query, args...); err != nil {
+		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, nil
+	}
+	return &res[0], nil
+}
+
+func (r *repo) GetItemBySteamAppID(ctx context.Context, steamAppID int64) (*item.Item, error) {
+	query, args, err := sq.Select("*").From(`public.item`).
+		Where(sq.Eq{"steam_app_id": steamAppID}).
 		Limit(1).
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {

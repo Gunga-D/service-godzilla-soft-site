@@ -2,6 +2,10 @@ package category
 
 import "github.com/AlekSi/pointer"
 
+const (
+	GamesCategoryID = 10001
+)
+
 type Category struct {
 	ID       int64
 	ParentID *int64

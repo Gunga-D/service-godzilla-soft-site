@@ -10,9 +10,9 @@ import (
 
 	"github.com/AlekSi/pointer"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/deepseek"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/neuro"
-	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
 )
 
 const (
@@ -21,19 +21,19 @@ const (
 )
 
 type service struct {
-	deepseekClient deepseek.Client
-	currentPrompt  string
-	itemCache      itemCache
-	g              getter
-	redis          redis.Redis
+	deepseekClient       deepseek.Client
+	currentPrompt        string
+	itemCache            itemCache
+	g                    getter
+	newNeuroItemsDatabus newNeuroItemsDatabus
 }
 
-func NewService(deepseekClient deepseek.Client, itemCache itemCache, g getter, redis redis.Redis) *service {
+func NewService(deepseekClient deepseek.Client, itemCache itemCache, g getter, newNeuroItemsDatabus newNeuroItemsDatabus) *service {
 	return &service{
-		deepseekClient: deepseekClient,
-		itemCache:      itemCache,
-		g:              g,
-		redis:          redis,
+		deepseekClient:       deepseekClient,
+		itemCache:            itemCache,
+		g:                    g,
+		newNeuroItemsDatabus: newNeuroItemsDatabus,
 	}
 }
 
@@ -89,6 +89,13 @@ func (s *service) sync(ctx context.Context) error {
 }
 
 func (s *service) Search(ctx context.Context, id string, query string) neuro.TaskResult {
+	err := s.newNeuroItemsDatabus.PublishDatabusNeuroNewItems(ctx, databus.NeuroNewItemsDTO{
+		Query: query,
+	})
+	if err != nil {
+		log.Printf("cannot publish to neuro new items queue: %v\n", err)
+	}
+
 	resp, err := s.deepseekClient.Completions(ctx, deepseek.CompletionsRequest{
 		Model: "deepseek-chat",
 		Messages: []deepseek.MessageDTO{

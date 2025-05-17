@@ -8,4 +8,5 @@ type Client interface {
 	AppDetails(ctx context.Context, appID int64) (*AppDetails, error)
 	GetGenreApps(ctx context.Context, genre string) (*GenreList, error)
 	FetchPrices(ctx context.Context, appIds []string, loc *string) (*FetchPricesResponse, error)
+	Search(ctx context.Context, appName string) (*SearchAppsResponse, error)
 }

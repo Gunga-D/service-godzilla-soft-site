@@ -151,3 +151,18 @@ func (c *client) FetchPrices(ctx context.Context, appIds []string, loc *string) 
 	}
 	return resp.Result().(*FetchPricesResponse), nil
 }
+
+func (c *client) Search(ctx context.Context, appName string) (*SearchAppsResponse, error) {
+	resp, err := c.rc.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetResult(SearchAppsResponse{}).
+		Get(fmt.Sprintf("https://steamcommunity.com/actions/SearchApps/%s", appName))
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("status code is not ok = %d", resp.StatusCode())
+	}
+	return resp.Result().(*SearchAppsResponse), nil
+}

@@ -121,3 +121,9 @@ type PriceResult struct {
 		} `json:"price_overview"`
 	} `json:"data"`
 }
+
+type SearchAppsResponse []SearchAppDTO
+
+type SearchAppDTO struct {
+	AppID string `json:"appid"`
+}

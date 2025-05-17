@@ -124,7 +124,7 @@ func main() {
 	go itemCache.StartSync(ctx)
 	itemSuggestSrv := suggest.NewService(itemRepo, itemCache)
 	go itemSuggestSrv.StartSync(ctx)
-	neuroSearch := search.NewService(deepseekClient, itemCache, itemRepo, redis)
+	neuroSearch := search.NewService(deepseekClient, itemCache, itemRepo, databusClient)
 	go neuroSearch.StartSync(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres, redis)

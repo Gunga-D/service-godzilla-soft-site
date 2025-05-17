@@ -8,9 +8,12 @@ import (
 	"syscall"
 	"text/template"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/deepseek"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_mail"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/change_item_state"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/neuro_new_items"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/new_user_email"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/new_user_steam_link"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/send_to_email"
@@ -32,6 +35,8 @@ func main() {
 	itemRepo := item_postgres.NewRepo(postgres)
 	userRepo := user_postgres.NewRepo(postgres, redis)
 
+	steamClient := steam.NewClient(os.Getenv("STEAM_KEY"))
+	deepseekClient := deepseek.NewClient(os.Getenv("DEEPSEEK_URL"), os.Getenv("DEEPSEEK_TOKEN"))
 	yandexMailClient := yandex_mail.NewClient(os.Getenv("YANDEX_MAIL_ADDRESS"),
 		os.Getenv("YANDEX_MAIL_LOGIN"),
 		os.Getenv("YANDEX_MAIL_PASSWORD"))
@@ -55,6 +60,9 @@ func main() {
 
 	log.Println("start consume new user steam link databus")
 	go new_user_steam_link.NewHandler(databusClient, userRepo).Consume(ctx)
+
+	log.Println("start consume neuro new items")
+	go neuro_new_items.NewHandler(itemRepo, deepseekClient, steamClient, databusClient).Consume(ctx)
 
 	<-ctx.Done()
 }

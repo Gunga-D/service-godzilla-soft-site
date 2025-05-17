@@ -25,3 +25,7 @@ type NeuroTaskDTO struct {
 	ID    string `json:"id"`
 	Query string `json:"query"`
 }
+
+type NeuroNewItemsDTO struct {
+	Query string `json:"query"`
+}
