@@ -6,6 +6,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 )
 
-type neuroTaskDatabus interface {
+type neuroDatabus interface {
 	PublishDatabusNeuroTask(ctx context.Context, msg databus.NeuroTaskDTO) error
+	PublishDatabusNeuroNewItems(ctx context.Context, msg databus.NeuroNewItemsDTO) error
 }

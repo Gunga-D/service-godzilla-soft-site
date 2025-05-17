@@ -3,7 +3,6 @@ package search
 import (
 	"context"
 
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/item"
 )
 
@@ -13,8 +12,4 @@ type itemCache interface {
 
 type getter interface {
 	FetchItemsPaginatedCursorItemId(ctx context.Context, limit uint64, cursor int64) ([]item.Item, error)
-}
-
-type newNeuroItemsDatabus interface {
-	PublishDatabusNeuroNewItems(ctx context.Context, msg databus.NeuroNewItemsDTO) error
 }

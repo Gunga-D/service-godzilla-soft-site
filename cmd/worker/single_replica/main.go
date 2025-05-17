@@ -66,7 +66,7 @@ func main() {
 		steam_filler.NewFiller(),
 	}, itemRecommendation)
 
-	neuroSearch := search.NewService(deepseekClient, itemCache, itemRepo, databusClient)
+	neuroSearch := search.NewService(deepseekClient, itemCache, itemRepo)
 	go neuroSearch.StartSync(ctx)
 
 	rt, err := template.ParseFiles("assets/registration-template.html")

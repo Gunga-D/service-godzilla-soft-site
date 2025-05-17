@@ -2,6 +2,7 @@ package think
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
@@ -11,12 +12,12 @@ import (
 )
 
 type handler struct {
-	neuroTaskDatabus neuroTaskDatabus
+	neuroDatabus neuroDatabus
 }
 
-func NewHandler(neuroTaskDatabus neuroTaskDatabus) *handler {
+func NewHandler(neuroDatabus neuroDatabus) *handler {
 	return &handler{
-		neuroTaskDatabus: neuroTaskDatabus,
+		neuroDatabus: neuroDatabus,
 	}
 }
 
@@ -30,10 +31,20 @@ func (h *handler) Handle() http.HandlerFunc {
 		logger.Get().Log(fmt.Sprintf("🤔 Размышляем по запросу - %s", body.Query))
 
 		taskID := uuid.NewString()
-		if err := h.neuroTaskDatabus.PublishDatabusNeuroTask(r.Context(), databus.NeuroTaskDTO{
+		if err := h.neuroDatabus.PublishDatabusNeuroTask(r.Context(), databus.NeuroTaskDTO{
 			ID:    taskID,
 			Query: body.Query,
 		}); err != nil {
+			log.Printf("cannot publish to neuro task: %v\n", err)
+			api.Return500("Неизвестная ошибка", w)
+			return
+		}
+
+		err := h.neuroDatabus.PublishDatabusNeuroNewItems(r.Context(), databus.NeuroNewItemsDTO{
+			Query: body.Query,
+		})
+		if err != nil {
+			log.Printf("cannot publish to neuro new items queue: %v\n", err)
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
