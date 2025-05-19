@@ -146,9 +146,9 @@ func main() {
 			http.MethodOptions,
 		},
 		AllowedHeaders:   []string{"*"},
-		AllowCredentials: false,
+		AllowCredentials: true,
+		Debug:            true,
 	})
-	cors.AllowAll()
 	mux.Use(c.Handler)
 
 	mux.Route("/v1", func(r1 chi.Router) {
