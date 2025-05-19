@@ -91,6 +91,11 @@ func (h *handler) Consume(ctx context.Context) {
 				log.Printf("neuro new items: skip steam appName - %s cause appID invalid\n", appName)
 				continue
 			}
+			// Не рассматривать игры: Cyberpunk 2077
+			if steamAppID == 1091500 {
+				log.Printf("neuro new items: skip steam appName - %s cause disabled game (Cyberpunk 2077)\n", appName)
+				continue
+			}
 			i, err := h.itemsRepo.GetItemBySteamAppID(ctx, steamAppID)
 			if err != nil {
 				log.Printf("neuro new items: skip steam appName - %s cause cannot get items repo info: %v\n", appName, err)
@@ -106,6 +111,11 @@ func (h *handler) Consume(ctx context.Context) {
 				log.Printf("neuro new items: skip steam appName - %s cause cannot get app details: %v\n", appName, err)
 				continue
 			}
+			if appDetails.Type != "game" {
+				log.Printf("neuro new items: skip steam appName - %s cause not game\n", appName)
+				continue
+			}
+
 			rawSteamData, err := json.Marshal(*appDetails)
 			if err != nil {
 				log.Printf("neuro new items: skip steam appName - %s cause cannot marshal steam data: %v\n", appName, err)
