@@ -133,19 +133,7 @@ func main() {
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
-	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{
-			"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD",
-		},
-		AllowedHeaders:   []string{"*"},
-		ExposedHeaders:   []string{"*"},
-		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "*"
-		},
-		Debug: false,
-	})
+	c := cors.AllowAll()
 	mux.Use(c.Handler)
 
 	mux.Route("/v1", func(r1 chi.Router) {
