@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -133,7 +134,21 @@ func main() {
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
-	c := cors.AllowAll()
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{
+			http.MethodHead,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: false,
+	})
+	cors.AllowAll()
 	mux.Use(c.Handler)
 
 	mux.Route("/v1", func(r1 chi.Router) {
