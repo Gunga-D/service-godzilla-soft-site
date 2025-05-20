@@ -91,9 +91,9 @@ func (h *handler) Consume(ctx context.Context) {
 				log.Printf("neuro new items: skip steam appName - %s cause appID invalid\n", appName)
 				continue
 			}
-			// Не рассматривать игры: Cyberpunk 2077, Grounded, Bayonetta, Hogwarts Legacy, DAVE THE DIVER, Garry's Mod
+			// Не рассматривать игры: Cyberpunk 2077, Grounded, Bayonetta, Hogwarts Legacy, DAVE THE DIVER, Garry's Mod, Black Desert
 			if steamAppID == 1091500 || steamAppID == 962130 || steamAppID == 460790 || steamAppID == 990080 ||
-				steamAppID == 1868140 || steamAppID == 4000 {
+				steamAppID == 1868140 || steamAppID == 4000 || steamAppID == 582660 {
 				log.Printf("neuro new items: skip steam appName - %s cause disabled game (Cyberpunk 2077)\n", appName)
 				continue
 			}
