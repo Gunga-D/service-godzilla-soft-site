@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/AlekSi/pointer"
@@ -39,19 +40,41 @@ func (h *handler) Handle() http.HandlerFunc {
 			api.Return400("Ссылка на профиль некорректная", w)
 			return
 		}
-		steamID := strings.TrimSuffix(strings.TrimPrefix(u.Path, "/id/"), "/")
-		if steamID == "" {
-			api.Return400("Ссылка на профиль некорректная", w)
-			return
+		var steamBase64ID int64
+		// Если ссылка на профиль следующего вида:
+		// https://steamcommunity.com/id/rombewfwf/
+		if strings.Contains(u.Path, "/id/") {
+			steamID := strings.TrimSuffix(strings.TrimPrefix(u.Path, "/id/"), "/")
+			if steamID == "" {
+				api.Return400("Ссылка на профиль некорректная", w)
+				return
+			}
+
+			steamBase64ID, err = h.steamClient.ResolveProfileID(r.Context(), steamID)
+			if err != nil {
+				logger.Get().Log(fmt.Sprintf("❗️ Не получилось получить профиль по ссылке: %s", body.ProfileURL))
+
+				api.Return500("Что-то пошло не так, попробуйте чуть позже", w)
+				return
+			}
+		}
+		// Если ссылка на профиль следующего вида:
+		// https://steamcommunity.com/profiles/76561198284384725/
+		if strings.Contains(u.Path, "/profiles/") {
+			steamID := strings.TrimSuffix(strings.TrimPrefix(u.Path, "/profiles/"), "/")
+			if steamID == "" {
+				api.Return400("Ссылка на профиль некорректная", w)
+				return
+			}
+			steamBase64ID, err = strconv.ParseInt(steamID, 10, 64)
+			if err != nil {
+				logger.Get().Log(fmt.Sprintf("❗️ Не получилось получить профиль по ссылке: %s", body.ProfileURL))
+
+				api.Return500("Что-то пошло не так, попробуйте чуть позже", w)
+				return
+			}
 		}
 
-		steamBase64ID, err := h.steamClient.ResolveProfileID(r.Context(), steamID)
-		if err != nil {
-			logger.Get().Log(fmt.Sprintf("❗️ Не получилось получить профиль по ссылке: %s", body.ProfileURL))
-
-			api.Return500("Что-то пошло не так, попробуйте чуть позже", w)
-			return
-		}
 		profileInfo, err := h.steamClient.GetProfileInfo(r.Context(), steamBase64ID)
 		if err != nil {
 			log.Printf("error to get steam profile info: %v", err)

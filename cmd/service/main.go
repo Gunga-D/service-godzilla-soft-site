@@ -147,7 +147,7 @@ func main() {
 		},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
-		Debug:            true,
+		Debug:            false,
 	})
 	mux.Use(c.Handler)
 
