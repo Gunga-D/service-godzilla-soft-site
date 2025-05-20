@@ -54,7 +54,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				kzSteamAppIds = append(kzSteamAppIds, fmt.Sprint(*item.SteamAppID))
 
 				// Тут для ru исключаем Battlefield™ V и Metro 2033 Redux
-				if *item.SteamAppID != 1238810 && *item.SteamAppID != 286690 {
+				if *item.SteamAppID != 1238810 && *item.SteamAppID != 286690 && *item.SteamAppID != 268500 {
 					ruSteamAppIds = append(ruSteamAppIds, fmt.Sprint(*item.SteamAppID))
 				}
 			}
