@@ -4,6 +4,7 @@ package popular_items
 var popularItems = []int64{
 	439, // DOOM: The Dark Ages
 	334, // Clair Obscur: Expedition 33
+	31,  // Metro Exodus
 	339, // Oblivion Remastered
 	220, // Forza Horizon 5
 	1,   // HellDivers 2
@@ -15,6 +16,7 @@ var popularItems = []int64{
 var popularMAVItems = []int64{
 	439, // DOOM: The Dark Ages
 	334, // Clair Obscur: Expedition 33
+	31,  // Metro Exodus
 	220, // Forza Horizon 5
 	1,   // HellDivers 2
 	31,  // Metro Exodus
