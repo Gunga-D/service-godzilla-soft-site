@@ -7,6 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/AlekSi/pointer v1.2.0
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/cohesion-org/deepseek-go v1.3.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.5
 	github.com/go-resty/resty/v2 v2.16.5
@@ -26,7 +27,6 @@ require (
 	github.com/RoaringBitmap/roaring v0.5.5 // indirect
 	github.com/alldroll/cdb v1.0.2 // indirect
 	github.com/beevik/etree v1.5.1 // indirect
-	github.com/cohesion-org/deepseek-go v1.3.2 // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20190108065903-904c4ced31cd // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20181221182339-f9677308dec2 // indirect
