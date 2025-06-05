@@ -1,7 +1,12 @@
 package postgres
 
+// this file implements
+// 1. topics fetchig from postgres
+// 2. topics loading to postgres
+
 import (
 	"context"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
 	sq "github.com/Masterminds/squirrel"
 	"time"
@@ -11,19 +16,13 @@ type Repo struct {
 	db postgres.TxDatabase
 }
 
-type Topic struct {
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
 func NewRepo(db postgres.TxDatabase) *Repo {
 	return &Repo{
 		db: db,
 	}
 }
 
-func (r *Repo) CreateTopic(ctx context.Context, topic Topic) (int64, error) {
+func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) (int64, error) {
 	q := sq.Insert("public.topics").
 		Columns(
 			"topic_title",
