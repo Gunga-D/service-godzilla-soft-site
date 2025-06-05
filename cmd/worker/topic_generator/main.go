@@ -2,121 +2,24 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	deepseek "github.com/cohesion-org/deepseek-go"
-	"log"
-	"os"
-	"path/filepath"
+	gen "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/topics"
+	pg "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
+	"github.com/cohesion-org/deepseek-go"
+	"os/signal"
 	"sync"
-	"sync/atomic"
-	"time"
+	"syscall"
 )
-
-type TopicAIResponse struct {
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-func GetApiKey() string {
-	res := os.Getenv("DEEPSEEK_TOKEN")
-	if len(res) <= 0 {
-		log.Fatal("DEEPSEEK_TOKEN environment variable not set")
-	}
-	return res
-}
-
-func GetApiURL() string {
-	res := os.Getenv("DEEPSEEK_URL")
-	if len(res) <= 0 {
-		log.Fatal("DEEPSEEK_URL environment variable not set")
-	}
-	return res
-}
-
-const (
-	topicThemesPromt string = "Представь, что ты продюсер статей для сайта, на котором продаются цифровые товары: " +
-		"ключи Steam/EA/Microsoft и другие, подарки Steam, случайные игры, услуги пополнения игровых аккаунтов. " +
-		"Сгенерируй список возможных статей, которые могут быть представлены на этом сайте. " +
-		"Напиши их название и коротко опиши их содержание в виде оглавления. " +
-		"Не акцентируй внимание на продаже игр в нашем магазине, а скорее предлагай статьи, которые могут заинтеровать игроков чем-то новым."
-	topicGenerationPromt string = "Исходя из предложенных тобой варинатов статей, выбери один вариант и создай описание этой статьи в формате Json, объем статьи должен быть в рамках 2000-5000 символов."
-)
-
-func GenerateTopic(client *deepseek.Client) (TopicAIResponse, error) {
-	// generate topic themes
-	request := &deepseek.ChatCompletionRequest{
-		Model: deepseek.DeepSeekReasoner,
-		Messages: []deepseek.ChatCompletionMessage{
-			{
-				Role: deepseek.ChatMessageRoleUser, Content: topicThemesPromt,
-			},
-		},
-	}
-
-	// Send the request and handle the response
-	ctx := context.Background()
-	response, err := client.CreateChatCompletion(ctx, request)
-	if err != nil {
-		return TopicAIResponse{}, errors.New(fmt.Sprintf("Themes generation response error: %v", err))
-	}
-
-	// generate topic according to themes
-	request = &deepseek.ChatCompletionRequest{
-		Model: deepseek.DeepSeekReasoner,
-		ResponseFormat: &deepseek.ResponseFormat{
-			Type: "json_object",
-		},
-		Messages: []deepseek.ChatCompletionMessage{
-			request.Messages[0], // previous user message
-			{
-				Role: deepseek.ChatMessageRoleAssistant, Content: response.Choices[0].Message.Content, // assistant response
-			},
-			{
-				Role: deepseek.ChatMessageRoleSystem, Content: "Отвечать на запросы нужно в строгом Json формате:" +
-					"{ 'title' : 'Заголовок статьи' }" +
-					"{ 'content' : 'Основная часть статьи в формате Markdown' }",
-			},
-			{
-				Role: deepseek.ChatMessageRoleUser, Content: topicGenerationPromt,
-			},
-		},
-	}
-
-	// wait for specific topic response
-	response, err = client.CreateChatCompletion(ctx, request)
-	if err != nil {
-		return TopicAIResponse{}, errors.New(fmt.Sprintf("Topic generation response error: %v", err))
-	}
-
-	var resp TopicAIResponse
-	err = json.Unmarshal([]byte(response.Choices[len(response.Choices)-1].Message.Content), &resp)
-	if err != nil {
-		return TopicAIResponse{}, errors.New(fmt.Sprintf("Unmarshal error: %v", err))
-	}
-	return resp, nil
-}
 
 func main() {
-	// Set up the Deepseek client
-	var index atomic.Int32
-	var mu sync.Mutex
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
-	workdir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := postgres.Get(ctx)
+	repo := pg.NewRepo(db)
 
-	dir := filepath.FromSlash(workdir + "/topics/generated/")
-	err = os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	client := deepseek.NewClient(GetApiKey(), GetApiURL())
-
+	client := deepseek.NewClient(gen.GetApiKey(), gen.GetApiURL())
 	var wg sync.WaitGroup
 	errChan := make(chan error, 10) // buffer for all potential errors
 
@@ -125,30 +28,19 @@ func main() {
 		go func() {
 			defer wg.Done()
 
-			topic, err := GenerateTopic(client)
+			topic, err := gen.GenerateTopic(ctx, client)
 			if err != nil {
 				errChan <- err
 				return
 			}
 
-			// Get and increment index atomically
-			currentIndex := index.Add(1) - 1
-
-			mu.Lock()
-			defer mu.Unlock()
-
-			path := filepath.FromSlash(dir + fmt.Sprintf("topic%d.md", currentIndex))
-			file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, os.ModePerm)
+			id, err := repo.CreateTopic(ctx, topic)
 			if err != nil {
 				errChan <- err
 				return
 			}
-			defer file.Close()
 
-			_, err = file.Write([]byte(topic.Content))
-			if err != nil {
-				errChan <- err
-			}
+			fmt.Printf("Topic with id = %d is created in database\n", id)
 		}()
 	}
 
