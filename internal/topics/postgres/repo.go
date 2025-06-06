@@ -33,7 +33,7 @@ func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) (int64, erro
 		Values(
 			topic.Title,
 			topic.Content,
-			topic.CreatedAt,
+			time.Now(),
 			time.Now())
 
 	query, args, err := q.Suffix(`RETURNING id`).

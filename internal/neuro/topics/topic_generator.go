@@ -91,6 +91,5 @@ func GenerateTopic(ctx context.Context, client *deepseek.Client) (topics.Topic, 
 		return topics.Topic{}, errors.New(fmt.Sprintf("Unmarshal error: %v", err))
 	}
 
-	resp.CreatedAt = time.Now()
 	return resp, nil
 }
