@@ -50,7 +50,7 @@ func (r *Repo) GetPreviews(ctx context.Context, limit uint64, offset uint64) ([]
 			}
 		} else {
 			// fetch from postgres
-			topic, err := r.pg.FetchTopic(ctx, int64(id))
+			topic, err := r.pg.GetTopic(ctx, int64(id))
 			if err != nil {
 				return nil, err
 			}

@@ -91,7 +91,7 @@ func (r *Repo) FetchTopics(ctx context.Context, limit uint64, offset uint64) ([]
 	return res, nil
 }
 
-func (r *Repo) FetchTopic(ctx context.Context, id int64) (topics.Topic, error) {
+func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 	query, args, err := sq.Select("*").From(`public.topics`).
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).ToSql()
@@ -110,7 +110,7 @@ func (r *Repo) FetchTopic(ctx context.Context, id int64) (topics.Topic, error) {
 }
 
 func (r *Repo) FetchTopicPreview(ctx context.Context, id int64) (topics.Preview, error) {
-	topic, err := r.FetchTopic(ctx, id)
+	topic, err := r.GetTopic(ctx, id)
 	if err != nil {
 		return topics.Preview{}, err
 	}
