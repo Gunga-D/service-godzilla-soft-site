@@ -97,16 +97,16 @@ func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 		PlaceholderFormat(sq.Dollar).ToSql()
 
 	if err != nil {
-		return topics.Topic{}, err
+		return nil, err
 	}
 
-	var res topics.Topic
-	err = r.db.GetContext(ctx, &res, query, args...)
-	if err != nil {
-		return topics.Topic{}, err
-	}
+	var res []topics.Topic
+	err = r.db.SelectContext(ctx, &res, query, args...)
 
-	return res, nil
+	if len(res) == 0 || err != nil {
+		return nil, err
+	}
+	return &res[0], nil
 }
 
 func (r *Repo) FetchTopicPreview(ctx context.Context, id int64) (topics.Preview, error) {
