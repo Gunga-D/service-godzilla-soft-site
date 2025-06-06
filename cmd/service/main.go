@@ -131,6 +131,7 @@ func main() {
 	collectionRepo := collection_postgres.NewRepo(postgres)
 
 	reviewRepo := review_postgres.NewRepo(postgres)
+	topicsRepo := cached.NewRepo(topics_postgres.NewRepo(postgres), topics_redis.NewRedisRepo(redis))
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -209,6 +210,9 @@ func main() {
 
 		r1.Post("/think", think.NewHandler(databusClient).Handle())
 		r1.Post("/think_result", think_result.NewHandler(neuroCache).Handle())
+
+		// topics
+		r1.Get("/topics", fetch_topics_preview.NewHandler(topicsRepo).Handle())
 	})
 
 	log.Println("[info] server start up")
