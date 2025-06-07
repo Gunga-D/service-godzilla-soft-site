@@ -1,11 +1,14 @@
 package fetch_topics
 
 import (
+	"database/sql"
 	"fmt"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const (
@@ -15,6 +18,9 @@ const (
 
 type Handler struct {
 	repo *cached.Repo
+}
+
+type Response struct {
 }
 
 func NewHandler(repo *cached.Repo) *Handler {
@@ -34,12 +40,35 @@ func (h *Handler) Handle() http.HandlerFunc {
 			offset = defaultOffset
 		}
 
-		topics, err := h.repo.FetchTopics(r.Context(), limit, offset)
+		fetchedTopics, err := h.repo.FetchTopics(r.Context(), limit, offset)
 		if err != nil {
 			api.Return500(fmt.Sprintf("Ошибка получения статей: %v", err), w)
 			return
 		}
 
-		api.ReturnOK(topics, w)
+		api.ReturnOK(toResponse(fetchedTopics), w)
 	}
+}
+
+type topicResponse struct {
+	Id         int64          `json:"id"`
+	PreviewURL sql.NullString `json:"preview_url"`
+	Title      string         `json:"title"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+}
+
+// Convert your slice to []TopicResponse
+func toResponse(topics []topics.Topic) []topicResponse {
+	response := make([]topicResponse, len(topics))
+	for i, t := range topics {
+		response[i] = topicResponse{
+			Id:         t.Id,
+			PreviewURL: t.PreviewURL,
+			Title:      t.Title,
+			CreatedAt:  t.CreatedAt,
+			UpdatedAt:  t.UpdatedAt,
+		}
+	}
+	return response
 }
