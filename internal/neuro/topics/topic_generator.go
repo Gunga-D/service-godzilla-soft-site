@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	topics "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
+	topics "github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/cohesion-org/deepseek-go"
 	"log"
 	"os"
-	"time"
 )
 
 func GetApiKey() string {
