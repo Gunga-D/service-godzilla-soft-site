@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics_preview"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"log"
 	"net/http"
 	"os"
@@ -61,6 +63,8 @@ import (
 	neuro_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/redis"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	review_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/review/postgres"
+	topics_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
+	topics_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/redis"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	voucher_activation "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/activation"
