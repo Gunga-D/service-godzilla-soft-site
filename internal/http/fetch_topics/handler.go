@@ -1,4 +1,4 @@
-package fetch_topics_preview
+package fetch_topics
 
 import (
 	"fmt"

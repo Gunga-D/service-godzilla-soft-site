@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics_preview"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"log"
 	"net/http"
@@ -216,7 +216,7 @@ func main() {
 		r1.Post("/think_result", think_result.NewHandler(neuroCache).Handle())
 
 		// topics
-		r1.Get("/topics", fetch_topics_preview.NewHandler(topicsRepo).Handle())
+		r1.Get("/topics", fetch_topics.NewHandler(topicsRepo).Handle())
 	})
 
 	log.Println("[info] server start up")
