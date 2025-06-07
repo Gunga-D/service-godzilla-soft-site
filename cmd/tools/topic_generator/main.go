@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	gen "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/topics"
-	pg "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
+	topics_cached "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
+	topics_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
+	topics_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/redis"
+
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
 	"github.com/cohesion-org/deepseek-go"
 	"os/signal"
 	"sync"
@@ -17,7 +21,8 @@ func main() {
 	defer cancel()
 
 	db := postgres.Get(ctx)
-	repo := pg.NewRepo(db)
+	redis := redis.Get(ctx)
+	cachedRepo := topics_cached.NewRepo(topics_postgres.NewRepo(db), topics_redis.NewRedisRepo(redis))
 
 	client := deepseek.NewClient(gen.GetApiKey(), gen.GetApiURL())
 	var wg sync.WaitGroup
@@ -34,13 +39,13 @@ func main() {
 				return
 			}
 
-			id, err := repo.CreateTopic(ctx, topic)
+			id, err := cachedRepo.CreateTopic(ctx, topic)
 			if err != nil {
 				errChan <- err
 				return
 			}
 
-			fmt.Printf("Topic with id = %d is created in database\n", id)
+			fmt.Printf("Topic with id = %d is generated\n", id)
 		}()
 	}
 

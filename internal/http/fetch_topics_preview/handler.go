@@ -34,7 +34,7 @@ func (h *Handler) Handle() http.HandlerFunc {
 			offset = defaultOffset
 		}
 
-		previews, err := h.repo.GetPreviews(r.Context(), limit, offset)
+		previews, err := h.repo.FetchTopics(r.Context(), limit, offset)
 		if err != nil {
 			api.Return500(fmt.Sprintf("Ошибка получения статей: %v", err), w)
 			return

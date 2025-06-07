@@ -8,65 +8,38 @@ import (
 )
 
 type Repo struct {
-	pg     *postgres.Repo
-	redis  *redis.Repo
-	keyMap map[int64]string
+	pg    *postgres.Repo
+	redis *redis.Repo
 }
 
 func NewRepo(pg *postgres.Repo, redis *redis.Repo) *Repo {
 	return &Repo{
 		pg,
-		redis,
-		make(map[int64]string)}
+		redis}
 }
 
-func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) error {
+func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) (int64, error) {
+	// assign id provided by postgres
 	id, err := r.pg.CreateTopic(ctx, topic)
+	topic.Id = id
 	if err != nil {
-		return err
+		return -1, err
 	}
-	key, err := r.redis.CreateTopic(ctx, topic, id)
-	if err != nil {
-		return err
-	}
-	r.keyMap[id] = key
-	return nil
+	return topic.Id, r.redis.CreateTopic(ctx, topic)
 }
 
-func (r *Repo) GetPreviews(ctx context.Context, limit uint64, offset uint64) ([]topics.Preview, error) {
-	ids, err := r.pg.FetchIds(ctx, limit, offset)
-	if err != nil {
-		return nil, err
+func (r *Repo) FetchTopics(ctx context.Context, limit uint64, offset uint64) ([]topics.Topic, error) {
+	fetched, err := r.redis.FetchTopics(ctx, limit, offset)
+	if err == nil {
+		return fetched, nil
 	}
+	return r.pg.FetchTopics(ctx, limit, offset)
+}
 
-	var previews []topics.Preview
-	for _, id := range ids {
-		key, contains := r.keyMap[int64(id)]
-		var preview topics.Preview
-		if contains {
-			preview, err = r.redis.FetchTopicPreview(ctx, key)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			// fetch from postgres
-			topic, err := r.pg.GetTopic(ctx, int64(id))
-			if err != nil {
-				return nil, err
-			}
-			preview = topics.Preview{
-				Title:     topic.Title,
-				CreatedAt: topic.CreatedAt,
-				ImageURL:  "",
-			}
-			// cache in redis
-			key, err := r.redis.CreateTopic(ctx, topic, int64(id))
-			if err != nil {
-				return nil, err
-			}
-			r.keyMap[int64(id)] = key
-		}
-		previews = append(previews, preview)
+func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
+	topic, err := r.redis.GetTopic(ctx, id)
+	if err == nil {
+		return topic, nil
 	}
-	return previews, nil
+	return r.pg.GetTopic(ctx, id)
 }
