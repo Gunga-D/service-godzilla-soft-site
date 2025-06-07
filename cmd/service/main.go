@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"log"
 	"net/http"
@@ -217,6 +218,7 @@ func main() {
 
 		// topics
 		r1.Get("/topics", fetch_topics.NewHandler(topicsRepo).Handle())
+		r1.Get("/topic", get_topic.NewHandler(topicsRepo).Handle())
 	})
 
 	log.Println("[info] server start up")
