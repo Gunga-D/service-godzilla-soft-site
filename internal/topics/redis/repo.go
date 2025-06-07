@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	topicCacheKey = "topic:%d"
+	topicCacheIdsKey = "topics"
+	topicCacheKey    = "topic:%d"
 )
 
 type Repo struct {
@@ -23,9 +24,8 @@ func NewRedisRepo(redis redis.Redis) *Repo {
 	}
 }
 
-func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic, id int64) (string, error) {
-	key := fmt.Sprintf(topicCacheKey, id)
-	return key, r.redis.Set(ctx, key, topic, nil)
+func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) error {
+	return r.addTopic(ctx, topic)
 }
 
 func (r *Repo) FetchTopic(ctx context.Context, key string) (topics.Topic, error) {
@@ -42,14 +42,27 @@ func (r *Repo) FetchTopic(ctx context.Context, key string) (topics.Topic, error)
 	return t, nil
 }
 
-func (r *Repo) FetchTopicPreview(ctx context.Context, key string) (topics.Preview, error) {
-	topic, err := r.FetchTopic(ctx, key)
+func (r *Repo) fetchIds(ctx context.Context) ([]int64, error) {
+	members, err := r.redis.Members(ctx, topicCacheIdsKey)
 	if err != nil {
-		return topics.Preview{}, err
+		return nil, err
 	}
-	return topics.Preview{
-		ImageURL:  "",
-		Title:     topic.Title,
-		CreatedAt: topic.CreatedAt,
-	}, nil
+
+	res := make([]int64, len(members))
+	for i, val := range members {
+		res[i] = val.(int64)
+	}
+
+	return res, nil
+}
+
+func (r *Repo) addTopic(ctx context.Context, topic topics.Topic) error {
+	var arr []interface{}
+	arr = append(arr, topic.Id)
+	err := r.redis.Add(ctx, topicCacheIdsKey, arr)
+	if err != nil {
+		return err
+	}
+
+	return r.redis.Set(ctx, makeTopicKey(topic.Id), topic, nil)
 }

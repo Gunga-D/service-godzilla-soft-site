@@ -108,15 +108,3 @@ func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 	}
 	return &res[0], nil
 }
-
-func (r *Repo) FetchTopicPreview(ctx context.Context, id int64) (topics.Preview, error) {
-	topic, err := r.GetTopic(ctx, id)
-	if err != nil {
-		return topics.Preview{}, err
-	}
-	return topics.Preview{
-		ImageURL:  "",
-		Title:     topic.Title,
-		CreatedAt: topic.CreatedAt,
-	}, err
-}
