@@ -34,12 +34,12 @@ func (h *Handler) Handle() http.HandlerFunc {
 			offset = defaultOffset
 		}
 
-		previews, err := h.repo.FetchTopics(r.Context(), limit, offset)
+		topics, err := h.repo.FetchTopics(r.Context(), limit, offset)
 		if err != nil {
 			api.Return500(fmt.Sprintf("Ошибка получения статей: %v", err), w)
 			return
 		}
 
-		api.ReturnOK(previews, w)
+		api.ReturnOK(topics, w)
 	}
 }
