@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"log"
 	"net/http"
 	"os"
@@ -61,6 +64,8 @@ import (
 	neuro_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/redis"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	review_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/review/postgres"
+	topics_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
+	topics_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/redis"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	voucher_activation "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/activation"
@@ -131,6 +136,7 @@ func main() {
 	collectionRepo := collection_postgres.NewRepo(postgres)
 
 	reviewRepo := review_postgres.NewRepo(postgres)
+	topicsRepo := cached.NewRepo(topics_postgres.NewRepo(postgres), topics_redis.NewRedisRepo(redis))
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -209,6 +215,10 @@ func main() {
 
 		r1.Post("/think", think.NewHandler(databusClient).Handle())
 		r1.Post("/think_result", think_result.NewHandler(neuroCache).Handle())
+
+		// topics
+		r1.Get("/topics", fetch_topics.NewHandler(topicsRepo).Handle())
+		r1.Get("/topic", get_topic.NewHandler(topicsRepo).Handle())
 	})
 
 	log.Println("[info] server start up")
