@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
 	redigo "github.com/gomodule/redigo/redis"
@@ -78,16 +79,10 @@ func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 }
 
 func (r *Repo) fetchIds(ctx context.Context) ([]int64, error) {
-	members, err := r.redis.Members(ctx, topicCacheIdsKey)
+	res, err := redigo.Int64s(r.redis.Members(ctx, topicCacheIdsKey))
 	if err != nil {
 		return nil, err
 	}
-
-	res := make([]int64, len(members))
-	for i, val := range members {
-		res[i] = val.(int64)
-	}
-
 	return res, nil
 }
 
