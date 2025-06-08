@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	topics "github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
-	"github.com/cohesion-org/deepseek-go"
 	"log"
 	"os"
+
+	topics "github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
+	"github.com/cohesion-org/deepseek-go"
 )
 
 func GetApiKey() string {
@@ -19,7 +20,7 @@ func GetApiKey() string {
 }
 
 func GetApiURL() string {
-	res := os.Getenv("DEEPSEEK_URL")
+	res := os.Getenv("DEEPSEEK_TOPIC_URL")
 	if len(res) <= 0 {
 		log.Fatal("DEEPSEEK_URL environment variable not set")
 	}
