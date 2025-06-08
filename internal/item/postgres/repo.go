@@ -45,6 +45,7 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 			"horizontal_image",
 			"vertical_image",
 			"steam_raw_data",
+			"exists_in_random",
 			"created_at",
 			"updated_at",
 		).Values(
@@ -71,6 +72,7 @@ func (r *repo) CreateItem(ctx context.Context, i item.Item) (int64, error) {
 		i.HorizontalImage,
 		i.VerticalImage,
 		i.SteamRawData,
+		i.ExistsInRandom,
 		time.Now(),
 		time.Now(),
 	)

@@ -1,0 +1,1 @@
+alter table public.item add column exists_in_random boolean not null default false;

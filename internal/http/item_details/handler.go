@@ -197,6 +197,7 @@ func (h *handler) Handle() http.HandlerFunc {
 			PcRequirements:      pcRequirements,
 			SimilarGames:        similarGames,
 			HorizontalImageURL:  horizontalImageURL,
+			ExistsInRandom:      item.ExistsInRandom,
 		}
 
 		logger.Get().Log(fmt.Sprintf("👀 Товар\"%s\" просмотрели", item.Title))

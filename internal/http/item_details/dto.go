@@ -26,6 +26,7 @@ type ItemDTO struct {
 	Slip                string                `json:"slip"`
 	YandexMarket        *YandexMarketDTO      `json:"yandex_market,omitempty"`
 	SimilarGames        []SimilarGameDTO      `json:"similar_games,omitempty"`
+	ExistsInRandom      bool                  `json:"exists_in_random"`
 }
 
 type MovieDTO struct {
