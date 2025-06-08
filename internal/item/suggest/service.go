@@ -116,18 +116,16 @@ func (s *service) Suggest(ctx context.Context, text string) ([]Suggested, error)
 
 	res := make([]Suggested, 0, len(suggests))
 
-	// Исключения
-	// if strings.Contains(normQuery, "бесп") {
-	// 	res = append(res, Suggested{
-	// 		Type: "banner",
-	// 		Banner: &SuggestedBanner{
-	// 			Image: "https://disk.godzillasoft.ru/banner_inzoi_konkurs_1.jpg",
-	// 			Title: "Розыгрыш игры inZOI",
-	// 			URL:   "https://t.me/godzillasoftmedia/46",
-	// 		},
-	// 		Probability: 1.0,
-	// 	})
-	// }
+	res = append(res, Suggested{
+		Type: "banner",
+		Banner: &SuggestedBanner{
+			Image:       "https://disk.godzillasoft.ru/random_game_banner.png",
+			Title:       "Случайная Steam игра",
+			Description: "Испытай удачу и выиграй заветную игру всего лишь за 208₽",
+			URL:         "https://godzillasoft.ru/random",
+		},
+		Probability: 1.0,
+	})
 
 	for _, suggest := range suggests {
 		i, err := s.itemCache.GetItemByName(ctx, suggest.Value)

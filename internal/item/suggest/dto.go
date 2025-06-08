@@ -10,7 +10,8 @@ type Suggested struct {
 }
 
 type SuggestedBanner struct {
-	Image string
-	Title string
-	URL   string
+	Image       string
+	Title       string
+	Description string
+	URL         string
 }

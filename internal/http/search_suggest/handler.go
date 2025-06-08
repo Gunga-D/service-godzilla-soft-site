@@ -79,11 +79,12 @@ func (h *handler) Handle() http.HandlerFunc {
 			}
 			if s.Type == "banner" {
 				res = append(res, SearchSuggestDTO{
-					SuggestType: s.Type,
-					BannerTitle: &s.Banner.Title,
-					BannerImage: &s.Banner.Image,
-					BannerURL:   &s.Banner.URL,
-					Probability: s.Probability,
+					SuggestType:       s.Type,
+					BannerTitle:       &s.Banner.Title,
+					BannerDescription: &s.Banner.Description,
+					BannerImage:       &s.Banner.Image,
+					BannerURL:         &s.Banner.URL,
+					Probability:       s.Probability,
 				})
 			}
 		}

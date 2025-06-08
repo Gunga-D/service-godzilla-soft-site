@@ -11,6 +11,7 @@ type SearchSuggestResponsePayload struct {
 type SearchSuggestDTO struct {
 	SuggestType         string   `json:"suggest_type"`
 	BannerTitle         *string  `json:"banner_title,omitempty"`
+	BannerDescription   *string  `json:"banner_description,omitempty"`
 	BannerImage         *string  `json:"banner_image,omitempty"`
 	BannerURL           *string  `json:"banner_url,omitempty"`
 	ItemID              *int64   `json:"item_id,omitempty"`
