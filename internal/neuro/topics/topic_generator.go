@@ -54,8 +54,12 @@ func makeTopicPromt(theme Theme) string {
 	return fmt.Sprintf(topicGenerationPromt, theme.Title, theme.Content)
 }
 
-func GenerateThemes(ctx context.Context, client *deepseek.Client) (Response, error) {
+func GenerateThemes(ctx context.Context, client *deepseek.Client, wishes string) (Response, error) {
 	// generate topic themes
+	promt := topicThemesPromt
+	if len(wishes) != 0 {
+		promt = fmt.Sprintf(promt+"Также следует учесть следующие предпочтения: %s.", wishes)
+	}
 	request := &deepseek.ChatCompletionRequest{
 		Model: deepseek.DeepSeekReasoner,
 		ResponseFormat: &deepseek.ResponseFormat{
@@ -63,7 +67,7 @@ func GenerateThemes(ctx context.Context, client *deepseek.Client) (Response, err
 		},
 		Messages: []deepseek.ChatCompletionMessage{
 			{
-				Role: deepseek.ChatMessageRoleUser, Content: topicThemesPromt,
+				Role: deepseek.ChatMessageRoleUser, Content: promt,
 			},
 			{
 				Role: deepseek.ChatMessageRoleSystem, Content: "Ответ должен содержать только сплошное описание в Json-формате." +
