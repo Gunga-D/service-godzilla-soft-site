@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
@@ -104,4 +105,46 @@ func (r *Repo) addTopic(ctx context.Context, topic topics.Topic) error {
 
 func makeTopicKey(id int64) string {
 	return fmt.Sprintf(topicCacheKey, id)
+}
+
+func (r *Repo) Clear(ctx context.Context) error {
+	ids, err := r.fetchIds(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range ids {
+		err = r.clearTopic(ctx, id)
+		if err != nil {
+			log.Printf("[error] Unable to clear %d topic cache: %s\n", id, err.Error())
+		}
+	}
+
+	return r.clearIds(ctx)
+}
+
+func (r *Repo) clearIds(ctx context.Context) error {
+	return r.redis.Del(ctx, topicCacheIdsKey)
+}
+
+func (r *Repo) clearTopic(ctx context.Context, id int64) error {
+	return r.redis.Del(ctx, makeTopicKey(id))
+}
+
+func (r *Repo) FetchAllTopics(ctx context.Context) ([]topics.Topic, error) {
+	ids, err := r.fetchIds(ctx)
+	if err != nil || len(ids) == 0 {
+		return nil, err
+	}
+
+	var res []topics.Topic
+	for _, id := range ids {
+		topic, err := r.GetTopic(ctx, id)
+		if err != nil {
+			log.Printf("[error] Unable to fetch topic for id %d: %s\n", id, err.Error())
+			continue
+		}
+		res = append(res, *topic)
+	}
+	return res, nil
 }

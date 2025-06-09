@@ -50,6 +50,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/telegram_sign_in"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think_result"
+	topics_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/http/topics/cache"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_change_password"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_profile"
@@ -70,7 +71,6 @@ import (
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	voucher_activation "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/activation"
 	voucher_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/postgres"
-	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/service"
@@ -78,7 +78,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
-	tele "gopkg.in/telebot.v4"
 )
 
 func main() {
@@ -90,15 +89,17 @@ func main() {
 
 	databusClient := databus.NewClient(ctx)
 
-	telebot, err := tele.NewBot(tele.Settings{
-		Token:  os.Getenv("TELEGRAM_TOKEN"),
-		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
-	})
-	if err != nil {
-		log.Printf("[error] cant init telegram bot: %v", err)
-		return
-	}
-	logger.Get().SetBot(telebot)
+	/*
+		telebot, err := tele.NewBot(tele.Settings{
+			Token:  os.Getenv("TELEGRAM_TOKEN"),
+			Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+		})
+		if err != nil {
+			log.Printf("[error] cant init telegram bot: %v", err)
+			return
+		}
+		logger.Get().SetBot(telebot)
+	*/
 
 	steamClient := steam.NewClient(os.Getenv("STEAM_KEY"))
 	tinkoffClient := tinkoff.NewClient(os.Getenv("TINKOFF_API_URL"), os.Getenv("TINKOFF_PASSWORD"), os.Getenv("TINKOFF_TERMINAL_KEY"))
@@ -219,6 +220,10 @@ func main() {
 		// topics
 		r1.Get("/topics", fetch_topics.NewHandler(topicsRepo).Handle())
 		r1.Get("/topic", get_topic.NewHandler(topicsRepo).Handle())
+
+		// topics cache
+		r1.Delete("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleDelete())
+		r1.Post("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleSync())
 	})
 
 	log.Println("[info] server start up")
