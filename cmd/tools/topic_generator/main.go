@@ -52,38 +52,4 @@ func main() {
 	fmt.Println("Publishing topic...")
 	identifier, err := cachedRepo.CreateTopic(ctx, topic)
 	fmt.Printf("Topic successfully created with id = %d\n", identifier)
-
-	/*
-		for i := 0; i < 10; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-
-				topic, err := gen.GenerateTopic(ctx, client)
-				if err != nil {
-					errChan <- err
-					return
-				}
-
-				id, err := cachedRepo.CreateTopic(ctx, topic)
-				if err != nil {
-					errChan <- err
-					return
-				}
-
-				fmt.Printf("Topic with id = %d is generated\n", id)
-			}()
-		}
-
-		// Wait for all goroutines to complete
-		go func() {
-			wg.Wait()
-			close(errChan)
-		}()
-
-		// Print any errors that occurred
-		for err := range errChan {
-			fmt.Println("Error:", err)
-		}
-	*/
 }
