@@ -94,7 +94,12 @@ func (r *Repo) addTopic(ctx context.Context, topic topics.Topic) error {
 		return err
 	}
 
-	return r.redis.Set(ctx, makeTopicKey(topic.Id), topic, nil)
+	data, err := json.Marshal(topic)
+	if err != nil {
+		return err
+	}
+
+	return r.redis.Set(ctx, makeTopicKey(topic.Id), data, nil)
 }
 
 func makeTopicKey(id int64) string {
