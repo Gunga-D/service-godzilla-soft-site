@@ -5,6 +5,8 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
+	tele "gopkg.in/telebot.v4"
 	"log"
 	"net/http"
 	"os"
@@ -89,17 +91,15 @@ func main() {
 
 	databusClient := databus.NewClient(ctx)
 
-	/*
-		telebot, err := tele.NewBot(tele.Settings{
-			Token:  os.Getenv("TELEGRAM_TOKEN"),
-			Poller: &tele.LongPoller{Timeout: 10 * time.Second},
-		})
-		if err != nil {
-			log.Printf("[error] cant init telegram bot: %v", err)
-			return
-		}
-		logger.Get().SetBot(telebot)
-	*/
+	telebot, err := tele.NewBot(tele.Settings{
+		Token:  os.Getenv("TELEGRAM_TOKEN"),
+		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+	})
+	if err != nil {
+		log.Printf("[error] cant init telegram bot: %v", err)
+		return
+	}
+	logger.Get().SetBot(telebot)
 
 	steamClient := steam.NewClient(os.Getenv("STEAM_KEY"))
 	tinkoffClient := tinkoff.NewClient(os.Getenv("TINKOFF_API_URL"), os.Getenv("TINKOFF_PASSWORD"), os.Getenv("TINKOFF_TERMINAL_KEY"))
