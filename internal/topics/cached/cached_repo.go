@@ -46,17 +46,29 @@ func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 }
 
 func (r *Repo) Sync(ctx context.Context) error {
-	allTopics, err := r.pg.FetchAll(ctx)
-	if err != nil {
-		return err
+	var offset uint64 = 0
+	const BatchSize uint64 = 100
+
+	for {
+		topicsBatch, err := r.pg.FetchTopics(ctx, BatchSize, offset)
+
+		if err != nil {
+			return err
+		}
+
+		if len(topicsBatch) == 0 {
+			break
+		}
+
+		for _, topic := range topicsBatch {
+			err = r.redis.CreateTopic(ctx, topic)
+			if err != nil {
+				log.Printf("[error] Could not create topic %d in cache while syncing: %s\n", topic.Id, err.Error())
+			}
+		}
+		offset += uint64(len(topicsBatch))
 	}
 
-	for _, topic := range allTopics {
-		err = r.redis.CreateTopic(ctx, topic)
-		if err != nil {
-			log.Printf("[error] Could not create topic %d in cache while syncing: %s\n", topic.Id, err.Error())
-		}
-	}
 	return nil
 }
 
