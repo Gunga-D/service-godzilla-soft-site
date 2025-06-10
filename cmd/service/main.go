@@ -170,6 +170,8 @@ func main() {
 			r2.Post("/load_codes", admin_load_codes.NewHandler(codeRepo, itemRepo, databusClient).Handle())
 			r2.Post("/save_thumbnail", admin_save_thumbnail.NewHandler(os.Getenv("GODZILLA_SOFT_DISK_LOGIN"), os.Getenv("GODZILLA_SOFT_DISK_PASSWORD")).Handle())
 			r2.Post("/recalc_price", admin_recalc_price.NewHandler(itemRepo, steamClient).Handle())
+			r2.Delete("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleDelete())
+			r2.Post("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleSync())
 		})
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())
@@ -220,10 +222,6 @@ func main() {
 		// topics
 		r1.Get("/topics", fetch_topics.NewHandler(topicsRepo).Handle())
 		r1.Get("/topic", get_topic.NewHandler(topicsRepo).Handle())
-
-		// topics cache
-		r1.Delete("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleDelete())
-		r1.Post("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleSync())
 	})
 
 	log.Println("[info] server start up")
