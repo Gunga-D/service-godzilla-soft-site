@@ -181,3 +181,15 @@ func convertKeys(keys []string) []interface{} {
 
 	return args
 }
+
+func (c *Pool) Execute(ctx context.Context, executor func(conn redigo.Conn) error) error {
+	conn, err := c.conn.GetContext(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		conn.Close()
+	}()
+
+	return executor(conn)
+}

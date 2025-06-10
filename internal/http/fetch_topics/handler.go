@@ -1,7 +1,6 @@
 package fetch_topics
 
 import (
-	"database/sql"
 	"fmt"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
@@ -51,11 +50,11 @@ func (h *Handler) Handle() http.HandlerFunc {
 }
 
 type topicResponse struct {
-	Id         int64          `json:"id"`
-	PreviewURL sql.NullString `json:"preview_url"`
-	Title      string         `json:"title"`
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at"`
+	Id         int64     `json:"id"`
+	PreviewURL string    `json:"preview_url"`
+	Title      string    `json:"title"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // Convert your slice to []TopicResponse
