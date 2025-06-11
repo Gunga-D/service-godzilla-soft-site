@@ -62,11 +62,14 @@ func toResponse(topics []topics.Topic) []topicResponse {
 	response := make([]topicResponse, len(topics))
 	for i, t := range topics {
 		response[i] = topicResponse{
-			Id:         t.Id,
-			PreviewURL: t.PreviewURL,
-			Title:      t.Title,
-			CreatedAt:  t.CreatedAt,
-			UpdatedAt:  t.UpdatedAt,
+			Id:        t.Id,
+			Title:     t.Title,
+			CreatedAt: t.CreatedAt,
+			UpdatedAt: t.UpdatedAt,
+		}
+		response[i].PreviewURL = ""
+		if t.PreviewURL != nil {
+			response[i].PreviewURL = *t.PreviewURL
 		}
 	}
 	return response
