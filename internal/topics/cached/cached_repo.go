@@ -2,6 +2,7 @@ package cached
 
 import (
 	"context"
+	"fmt"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/redis"
@@ -30,9 +31,11 @@ func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) (int64, erro
 
 func (r *Repo) FetchTopics(ctx context.Context, limit uint64, offset uint64) ([]topics.Topic, error) {
 	fetched, err := r.redis.FetchTopics(ctx, limit, offset)
-	if err == nil {
+	if err == nil && len(fetched) != 0 {
+		fmt.Println("[debug] fetched topics from redis cache!")
 		return fetched, nil
 	}
+	fmt.Println("[debug] fetched topics from postgres database!")
 	return r.pg.FetchTopics(ctx, limit, offset)
 }
 
