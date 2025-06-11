@@ -5,7 +5,6 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/redis"
-	"log"
 )
 
 type Repo struct {
@@ -51,7 +50,6 @@ func (r *Repo) Sync(ctx context.Context) error {
 
 	for {
 		topicsBatch, err := r.pg.FetchTopics(ctx, BatchSize, offset)
-
 		if err != nil {
 			return err
 		}
@@ -60,11 +58,9 @@ func (r *Repo) Sync(ctx context.Context) error {
 			break
 		}
 
-		for _, topic := range topicsBatch {
-			err = r.redis.CreateTopic(ctx, topic)
-			if err != nil {
-				log.Printf("[error] Could not create topic %d in cache while syncing: %s\n", topic.Id, err.Error())
-			}
+		err = r.redis.EmplaceTopics(ctx, topicsBatch)
+		if err != nil {
+			return err
 		}
 		offset += uint64(len(topicsBatch))
 	}

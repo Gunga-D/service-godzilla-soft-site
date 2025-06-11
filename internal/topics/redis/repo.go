@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	topicCacheIdsKey = "topics"
+	topicCacheIdsKey = "topics:created_at"
 	topicCacheKey    = "topic:%d"
 )
 
@@ -34,6 +34,20 @@ func NewRedisRepo(redis redis.Redis) *Repo {
 
 func (r *Repo) CreateTopic(ctx context.Context, topic topics.Topic) error {
 	return r.addTopic(ctx, topic)
+}
+
+func (r *Repo) EmplaceTopics(ctx context.Context, topics []topics.Topic) error {
+	keys, values := toMultiSetArgs(topics)
+	err := r.redis.MultiSet(ctx, keys, values, nil)
+	if err != nil {
+		return err
+	}
+
+	// set ids to ordered set
+	return r.redis.Execute(ctx, func(conn redigo.Conn) error {
+		_, err := conn.Do("ZADD", toZAddArgs(topics)...)
+		return err
+	})
 }
 
 func (r *Repo) FetchTopics(ctx context.Context, limit uint64, offset uint64) ([]topics.Topic, error) {
@@ -92,7 +106,7 @@ func (r *Repo) FetchAllTopics(ctx context.Context) ([]topics.Topic, error) {
 		keys[i] = makeTopicKey(id)
 	}
 
-	result, err := r.redis.MultiGet(ctx, keys)
+	result, err := r.redis.MultiGet(ctx, toMultiGetStrings(ids))
 	if err != nil {
 		return nil, err
 	}
@@ -120,10 +134,7 @@ func (r *Repo) addTopicImpl(c redigo.Conn, topic topics.Topic) error {
 		return err
 	}
 
-	args := redigo.Args{"topics:created_at"}.
-		Add(topic.CreatedAt.Unix()).
-		Add(topic.Id)
-	_, err = c.Do("ZADD", args...)
+	_, err = c.Do("ZADD", toZAddArgs([]topics.Topic{topic})...)
 	return err
 }
 
@@ -155,14 +166,8 @@ func (r *Repo) removeAllTopicsImpl(c redigo.Conn) error {
 		return nil
 	}
 
-	// 1. Prepare keys for DEL
-	keys := make([]interface{}, len(ids))
-	for i, id := range ids {
-		keys[i] = makeTopicKey(id)
-	}
-
 	// 2. Remove topics:%d cache
-	_, err = c.Do("DEL", keys...)
+	_, err = c.Do("DEL", toMultiGetArgs(ids)...)
 	return err
 }
 
@@ -177,14 +182,7 @@ func (r *Repo) fetchTopicsImpl(conn redigo.Conn, limit uint64, offset uint64) ([
 		return []topics.Topic{}, nil
 	}
 
-	// 2. Prepare keys for MGET
-	keys := make([]interface{}, len(ids))
-	for i, id := range ids {
-		keys[i] = fmt.Sprintf("topic:%d", id)
-	}
-
-	// 3. Get all topics in one operation
-	values, err := redigo.Values(conn.Do("MGET", keys...))
+	values, err := redigo.Values(conn.Do("MGET", toMultiGetArgs(ids)...))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get topics: %w", err)
 	}
@@ -206,4 +204,42 @@ func (r *Repo) fetchTopicsImpl(conn redigo.Conn, limit uint64, offset uint64) ([
 	}
 
 	return result, nil
+}
+
+func toZAddArgs(topics []topics.Topic) []interface{} {
+	args := redigo.Args{topicCacheIdsKey}
+	for _, topic := range topics {
+		args = args.Add(topic.CreatedAt.Unix(), topic.Id)
+	}
+	return args
+}
+
+func toMultiSetArgs(topics []topics.Topic) ([]string, []interface{}) {
+	keys := make([]string, len(topics))
+	values := make([]interface{}, len(topics))
+	for i, t := range topics {
+		bytes, err := json.Marshal(t)
+		if err != nil {
+			return nil, nil
+		}
+		keys[i] = makeTopicKey(t.Id)
+		values[i] = bytes
+	}
+	return keys, values
+}
+func toMultiGetArgs(ids []int64) []interface{} {
+	var res = make([]interface{}, len(ids))
+	strings := toMultiGetStrings(ids)
+	for i, str := range strings {
+		res[i] = str
+	}
+	return res
+}
+
+func toMultiGetStrings(ids []int64) []string {
+	keys := make([]string, len(ids))
+	for i, id := range ids {
+		keys[i] = makeTopicKey(id)
+	}
+	return keys
 }
