@@ -1,7 +1,6 @@
 package fetch_topics
 
 import (
-	"database/sql"
 	"fmt"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
@@ -51,11 +50,11 @@ func (h *Handler) Handle() http.HandlerFunc {
 }
 
 type topicResponse struct {
-	Id         int64          `json:"id"`
-	PreviewURL sql.NullString `json:"preview_url"`
-	Title      string         `json:"title"`
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at"`
+	Id         int64     `json:"id"`
+	PreviewURL string    `json:"preview_url"`
+	Title      string    `json:"title"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // Convert your slice to []TopicResponse
@@ -63,11 +62,14 @@ func toResponse(topics []topics.Topic) []topicResponse {
 	response := make([]topicResponse, len(topics))
 	for i, t := range topics {
 		response[i] = topicResponse{
-			Id:         t.Id,
-			PreviewURL: t.PreviewURL,
-			Title:      t.Title,
-			CreatedAt:  t.CreatedAt,
-			UpdatedAt:  t.UpdatedAt,
+			Id:        t.Id,
+			Title:     t.Title,
+			CreatedAt: t.CreatedAt,
+			UpdatedAt: t.UpdatedAt,
+		}
+		response[i].PreviewURL = ""
+		if t.PreviewURL != nil {
+			response[i].PreviewURL = *t.PreviewURL
 		}
 	}
 	return response

@@ -73,8 +73,8 @@ func (r *Repo) FetchIds(ctx context.Context, limit uint64, offset uint64) ([]int
 
 func (r *Repo) FetchTopics(ctx context.Context, limit uint64, offset uint64) ([]topics.Topic, error) {
 	query, args, err := sq.Select("*").From(`public.topics`).
-		Offset(offset).
 		OrderBy("created_at DESC").
+		Offset(offset).
 		Limit(limit).
 		PlaceholderFormat(sq.Dollar).ToSql()
 
@@ -107,4 +107,21 @@ func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 		return nil, err
 	}
 	return &res[0], nil
+}
+
+func (r *Repo) FetchAll(ctx context.Context) ([]topics.Topic, error) {
+	query, args, err := sq.Select("*").From(`public.topics`).
+		PlaceholderFormat(sq.Dollar).ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var res []topics.Topic
+	err = r.db.SelectContext(ctx, &res, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

@@ -1,6 +1,9 @@
 package redis
 
-import "context"
+import (
+	"context"
+	redigo "github.com/gomodule/redigo/redis"
+)
 
 type Redis interface {
 	Get(ctx context.Context, key string) (interface{}, error)
@@ -13,4 +16,5 @@ type Redis interface {
 	Members(ctx context.Context, key string) ([]interface{}, error)
 	IsMember(ctx context.Context, key string, val interface{}) (bool, error)
 	Rem(ctx context.Context, key string, vals []interface{}) error
+	Execute(ctx context.Context, builder func(conn redigo.Conn) error) error
 }
