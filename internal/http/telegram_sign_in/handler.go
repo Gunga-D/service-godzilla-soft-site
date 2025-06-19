@@ -50,10 +50,11 @@ func (h *handler) Handle() http.HandlerFunc {
 		var userEmail *string
 		if usr == nil {
 			createdUserID, err := h.userRepo.CreateUser(r.Context(), user.User{
-				PhotoURL:   req.PhotoURL,
-				Username:   req.Username,
-				FirstName:  req.FirstName,
-				TelegramID: &req.ID,
+				PhotoURL:            req.PhotoURL,
+				Username:            req.Username,
+				FirstName:           req.FirstName,
+				TelegramID:          &req.ID,
+				HasRegistrationGift: true,
 			})
 			if err != nil {
 				api.Return500("Произошла непредвиденная ошибка, попробуйте чуть позже", w)
