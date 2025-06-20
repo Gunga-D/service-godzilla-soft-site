@@ -137,7 +137,8 @@ func main() {
 	collectionRepo := collection_postgres.NewRepo(postgres)
 
 	reviewRepo := review_postgres.NewRepo(postgres)
-	topicsRepo := cached.NewRepo(topics_postgres.NewRepo(postgres), topics_redis.NewRedisRepo(redis))
+	topicsRedisRepo := topics_redis.NewRedisRepo(redis)
+	topicsRepo := cached.NewRepo(topics_postgres.NewRepo(postgres), topicsRedisRepo)
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -161,7 +162,7 @@ func main() {
 	mux.Route("/v1", func(r1 chi.Router) {
 		r1.Use(mdw.NewUseragent().IdentifyPlatform)
 
-		r1.Get("/sitemap.xml", sitemap.NewHandler(itemCache).Handle())
+		r1.Get("/sitemap.xml", sitemap.NewHandler(itemCache, topicsRedisRepo).Handle())
 
 		r1.Route("/admin", func(r2 chi.Router) {
 			r2.Use(mdw.NewBearerMDW(os.Getenv("ADMIN_SECRET_KEY")).VerifyUser)
