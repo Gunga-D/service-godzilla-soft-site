@@ -6,10 +6,14 @@ import (
 	"log"
 	"net/mail"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus/telegram_registration"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
@@ -18,10 +22,12 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
 	postgres := postgres.Get(ctx)
 	redis := redis.Get(ctx)
+	databusClient := databus.NewClient(ctx)
 
 	userRepo := user_postgres.NewRepo(postgres, redis)
 	orderRepo := order_postgres.NewRepo(postgres)
@@ -35,13 +41,6 @@ func main() {
 		return
 	}
 
-	telebot.Handle("/start", func(ctx tele.Context) error {
-		menu := &tele.ReplyMarkup{ResizeKeyboard: true}
-		menu.Inline(
-			tele.Row{menu.Data("Проверить подписку", "checkSubscription")},
-		)
-		return ctx.Send("Привет\\! Это бот GODZILLA SOFT, спасибо за регистрацию\\! Для получения *БЕСПЛАТНОЙ СЛУЧАЙНОЙ STEAM ИГРЫ* осталось только подписаться на наш [канал](https://t.me/godzillasoftmedia) и нажать кнопку \"Проверить подписку\"\\.", menu, tele.ModeMarkdownV2)
-	})
 	states := sync.Map{}
 	telebot.Handle(&tele.InlineButton{Unique: "checkSubscription"}, func(ctx tele.Context) error {
 		usr, err := userRepo.GetUserByTelegramID(context.Background(), ctx.Sender().ID)
@@ -124,7 +123,12 @@ func main() {
 	})
 
 	log.Println("start chatbot")
-	telebot.Start()
+	go telebot.Start()
+
+	log.Println("start consume telegram registration")
+	go telegram_registration.NewHandler(databusClient, telebot).Consume(ctx)
+
+	<-ctx.Done()
 }
 
 func normalizeForTeleMarkup(text string) string {

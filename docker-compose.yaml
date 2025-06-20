@@ -6,6 +6,17 @@ networks:
     name: service-godzilla-soft-site
 
 services:
+  registration_telegram:
+    build:
+      context: ./
+      dockerfile: ./docker/RegistrationTelegram.Dockerfile
+    env_file: ./.env.prod
+    depends_on:
+      postgres:
+        condition: service_healthy 
+    networks:
+      - service-godzilla-soft-site
+    restart: unless-stopped
   order_delivery_worker:
     build:
       context: ./
