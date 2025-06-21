@@ -7,13 +7,19 @@ import (
 	"github.com/ikeikeikeike/go-sitemap-generator/v2/stm"
 )
 
+const (
+	baseURL = "https://godzillasoft.ru"
+)
+
 type handler struct {
 	getter getter
+	src    topicSource
 }
 
-func NewHandler(getter getter) *handler {
+func NewHandler(getter getter, src topicSource) *handler {
 	return &handler{
 		getter: getter,
+		src:    src,
 	}
 }
 
@@ -32,6 +38,20 @@ func (h *handler) Handle() http.HandlerFunc {
 		// Блог
 		sm.Add(stm.URL{{"loc", "https://godzillasoft.ru/blog/luchshie-igri-2024-goda"}, {"changefreq", "daily"}, {"priority", "0.8"}})
 		sm.Add(stm.URL{{"loc", "https://godzillasoft.ru/blog/zelenie-magazin-ili-stoit-li-pokupat-lizenzirovanie-igri"}, {"changefreq", "daily"}, {"priority", "0.8"}})
+
+		// generated topics
+		topics, err := h.src.FetchAllTopics(r.Context())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		for _, t := range topics {
+			sm.Add(stm.URL{
+				{"loc", baseURL + fmt.Sprintf("/blog/%s", generatePathValue(t.Title, t.Id))},
+				{"changefreq", "daily"},
+				{"priority", "0.8"},
+			})
+		}
 
 		items, err := h.getter.FetchAllItems(r.Context())
 		if err != nil {

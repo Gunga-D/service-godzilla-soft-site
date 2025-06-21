@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
+	tele "gopkg.in/telebot.v4"
 	"log"
 	"net/http"
 	"os"
@@ -51,6 +56,7 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/telegram_sign_in"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/think_result"
+	topics_cache "github.com/Gunga-D/service-godzilla-soft-site/internal/http/topics/cache"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_change_password"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_login"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_profile"
@@ -71,7 +77,6 @@ import (
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
 	voucher_activation "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/activation"
 	voucher_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/postgres"
-	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/redis"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/service"
@@ -79,7 +84,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
-	tele "gopkg.in/telebot.v4"
 )
 
 func main() {
@@ -137,7 +141,8 @@ func main() {
 	collectionRepo := collection_postgres.NewRepo(postgres)
 
 	reviewRepo := review_postgres.NewRepo(postgres)
-	topicsRepo := cached.NewRepo(topics_postgres.NewRepo(postgres), topics_redis.NewRedisRepo(redis))
+	topicsRedisRepo := topics_redis.NewRedisRepo(redis)
+	topicsRepo := cached.NewRepo(topics_postgres.NewRepo(postgres), topicsRedisRepo)
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -161,7 +166,7 @@ func main() {
 	mux.Route("/v1", func(r1 chi.Router) {
 		r1.Use(mdw.NewUseragent().IdentifyPlatform)
 
-		r1.Get("/sitemap.xml", sitemap.NewHandler(itemCache).Handle())
+		r1.Get("/sitemap.xml", sitemap.NewHandler(itemCache, topicsRedisRepo).Handle())
 
 		r1.Route("/admin", func(r2 chi.Router) {
 			r2.Use(mdw.NewBearerMDW(os.Getenv("ADMIN_SECRET_KEY")).VerifyUser)
@@ -170,6 +175,8 @@ func main() {
 			r2.Post("/load_codes", admin_load_codes.NewHandler(codeRepo, itemRepo, databusClient).Handle())
 			r2.Post("/save_thumbnail", admin_save_thumbnail.NewHandler(os.Getenv("GODZILLA_SOFT_DISK_LOGIN"), os.Getenv("GODZILLA_SOFT_DISK_PASSWORD")).Handle())
 			r2.Post("/recalc_price", admin_recalc_price.NewHandler(itemRepo, steamClient).Handle())
+			r2.Delete("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleDelete())
+			r2.Post("/topics/cache", topics_cache.NewHandler(topicsRepo).HandleSync())
 		})
 
 		r1.Get("/categories_tree", categories_tree.NewHandler().Handle())
