@@ -13,6 +13,7 @@ import (
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_keys"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 	tele "gopkg.in/telebot.v4"
@@ -211,6 +212,7 @@ func main() {
 			r2.Post("/add_review", add_review.NewHandler(reviewRepo).Handle())
 
 			r2.Get("/user_profile", user_profile.NewHandler(redis, userRepo).Handle())
+			r2.Get("/user_keys", user_keys.NewHandler(orderRepo).Handle())
 		})
 
 		r1.Route("/steam_gift", func(r2 chi.Router) {

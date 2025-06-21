@@ -126,7 +126,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				return
 			}
 
-			cdkeyOrderID, err := h.orderCreator.CreateItemOrder(r.Context(), *body.Email, currentPrice, item.ID, item.Slip)
+			cdkeyOrderID, err := h.orderCreator.CreateItemOrder(r.Context(), *body.Email, currentPrice, item.ID, item.Slip, item.Title)
 			if err != nil {
 				log.Printf("[error] create order: %v", err)
 

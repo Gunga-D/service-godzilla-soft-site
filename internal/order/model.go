@@ -7,3 +7,12 @@ type PaidOrder struct {
 	ItemSlip  string `db:"item_slip"`
 	Amount    int64  `db:"amount"`
 }
+
+type UserOrder struct {
+	ID        string  `db:"id"`
+	CodeValue string  `db:"code_value"`
+	ItemSlip  *string `db:"item_slip"`
+	ItemName  *string `db:"item_name"`
+	Amount    int64   `db:"amount"`
+	Status    string  `db:"status"`
+}
