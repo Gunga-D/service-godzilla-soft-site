@@ -2,6 +2,7 @@ package sitemap
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/ikeikeikeike/go-sitemap-generator/v2/stm"
@@ -42,6 +43,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		// generated topics
 		topics, err := h.src.FetchAllTopics(r.Context())
 		if err != nil {
+			log.Printf("[error] cannot fetch all topics: %v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

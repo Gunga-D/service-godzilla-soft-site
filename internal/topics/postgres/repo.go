@@ -6,10 +6,11 @@ package postgres
 
 import (
 	"context"
+	"time"
+
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
 	sq "github.com/Masterminds/squirrel"
-	"time"
 )
 
 type Repo struct {
@@ -109,7 +110,7 @@ func (r *Repo) GetTopic(ctx context.Context, id int64) (*topics.Topic, error) {
 	return &res[0], nil
 }
 
-func (r *Repo) FetchAll(ctx context.Context) ([]topics.Topic, error) {
+func (r *Repo) FetchAllTopics(ctx context.Context) ([]topics.Topic, error) {
 	query, args, err := sq.Select("*").From(`public.topics`).
 		PlaceholderFormat(sq.Dollar).ToSql()
 
