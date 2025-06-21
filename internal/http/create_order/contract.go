@@ -12,8 +12,8 @@ type itemGetter interface {
 }
 
 type orderCreator interface {
-	CreateItemOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string, itemName string) (string, error)
-	CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64) (string, error)
+	CreateItemOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string, itemName string, utm *string) (string, error)
+	CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64, utm *string) (string, error)
 }
 
 type userDatabus interface {

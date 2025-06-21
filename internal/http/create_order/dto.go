@@ -5,6 +5,7 @@ type CreateOrderRequest struct {
 	SteamProfile *string `json:"steam_profile"`
 	Voucher      *string `json:"voucher"`
 	ItemID       int64   `json:"item_id"`
+	Utm          *string `json:"utm"`
 }
 
 type CreateOrderResponsePayload struct {

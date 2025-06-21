@@ -1,0 +1,1 @@
+ALTER TABLE public.order ADD COLUMN utm text;

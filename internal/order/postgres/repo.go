@@ -21,7 +21,7 @@ func NewRepo(db postgres.TxDatabase) *repo {
 	}
 }
 
-func (r *repo) CreateItemOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string, itemName string) (string, error) {
+func (r *repo) CreateItemOrder(ctx context.Context, email string, amount int64, itemID int64, itemSlip string, itemName string, utm *string) (string, error) {
 	var orderID string
 	err := r.db.WithTx(ctx, func(ctx context.Context) error {
 		codeValue, err := r.blockCode(ctx, itemID)
@@ -29,7 +29,7 @@ func (r *repo) CreateItemOrder(ctx context.Context, email string, amount int64, 
 			return fmt.Errorf("block code: %v", err)
 		}
 
-		newOrderID, err := r.insertOrder(ctx, email, amount, codeValue, itemSlip, itemName)
+		newOrderID, err := r.insertOrder(ctx, email, amount, codeValue, itemSlip, itemName, utm)
 		if err != nil {
 			return fmt.Errorf("insert order: %v", err)
 		}
@@ -42,8 +42,8 @@ func (r *repo) CreateItemOrder(ctx context.Context, email string, amount int64, 
 	return orderID, nil
 }
 
-func (r *repo) CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64) (string, error) {
-	newOrderID, err := r.insertOrder(ctx, steamProfile, amount, fmt.Sprintf("STEAM_GIFT_%d", itemID), "Нет инструкции", "Нет названия")
+func (r *repo) CreateItemGiftOrder(ctx context.Context, steamProfile string, amount int64, itemID int64, utm *string) (string, error) {
+	newOrderID, err := r.insertOrder(ctx, steamProfile, amount, fmt.Sprintf("STEAM_GIFT_%d", itemID), "Нет инструкции", "Нет названия", utm)
 	if err != nil {
 		return "", fmt.Errorf("insert order: %v", err)
 	}
@@ -51,7 +51,7 @@ func (r *repo) CreateItemGiftOrder(ctx context.Context, steamProfile string, amo
 }
 
 func (r *repo) CreateSteamOrder(ctx context.Context, steamLogin string, amount int64) (string, error) {
-	newOrderID, err := r.insertOrder(ctx, steamLogin, amount, "STEAM_INVOICE_BY_LOGIN", "Нет инструкции", "Нет названия")
+	newOrderID, err := r.insertOrder(ctx, steamLogin, amount, "STEAM_INVOICE_BY_LOGIN", "Нет инструкции", "Нет названия", nil)
 	if err != nil {
 		return "", fmt.Errorf("insert order: %v", err)
 	}
@@ -176,13 +176,14 @@ RETURNING code_value
 	return codeValue, nil
 }
 
-func (r *repo) insertOrder(ctx context.Context, email string, amount int64, codeValue string, itemSlip string, itemName string) (string, error) {
+func (r *repo) insertOrder(ctx context.Context, email string, amount int64, codeValue string, itemSlip string, itemName string, utm *string) (string, error) {
 	q := sq.Insert("public.order").
 		Columns(
 			"email",
 			"code_value",
 			"item_slip",
 			"item_name",
+			"utm",
 			"amount",
 			"status",
 			"created_at",
@@ -192,6 +193,7 @@ func (r *repo) insertOrder(ctx context.Context, email string, amount int64, code
 		codeValue,
 		itemSlip,
 		itemName,
+		utm,
 		amount,
 		order.PendingStatus,
 		time.Now(),

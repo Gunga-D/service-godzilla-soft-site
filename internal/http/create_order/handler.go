@@ -95,7 +95,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				}
 			}
 
-			giftOrderID, err := h.orderCreator.CreateItemGiftOrder(r.Context(), *body.SteamProfile, currentPrice, item.ID)
+			giftOrderID, err := h.orderCreator.CreateItemGiftOrder(r.Context(), *body.SteamProfile, currentPrice, item.ID, body.Utm)
 			if err != nil {
 				log.Printf("[error] create gift order: %v", err)
 				api.Return500("Неизвестная ошибка", w)
@@ -126,7 +126,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				return
 			}
 
-			cdkeyOrderID, err := h.orderCreator.CreateItemOrder(r.Context(), *body.Email, currentPrice, item.ID, item.Slip, item.Title)
+			cdkeyOrderID, err := h.orderCreator.CreateItemOrder(r.Context(), *body.Email, currentPrice, item.ID, item.Slip, item.Title, body.Utm)
 			if err != nil {
 				log.Printf("[error] create order: %v", err)
 
