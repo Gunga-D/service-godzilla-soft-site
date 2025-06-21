@@ -2,11 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
-	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
-	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
-	tele "gopkg.in/telebot.v4"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +14,8 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
+	tele "gopkg.in/telebot.v4"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
