@@ -34,6 +34,7 @@ func (r *repo) CreateUser(ctx context.Context, usr user.User) (int64, error) {
 			"first_name",
 			"telegram_id",
 			"steam_link",
+			"has_registration_gift",
 			"created_at",
 			"updated_at",
 		).Values(
@@ -44,6 +45,7 @@ func (r *repo) CreateUser(ctx context.Context, usr user.User) (int64, error) {
 		usr.FirstName,
 		usr.TelegramID,
 		usr.SteamLink,
+		usr.HasRegistrationGift,
 		time.Now(),
 		time.Now(),
 	)
@@ -129,6 +131,26 @@ func (r *repo) GetUserByTelegramID(ctx context.Context, telegramID int64) (*user
 		return nil, nil
 	}
 	return &res[0], nil
+}
+
+func (r *repo) RemoveFreeGift(ctx context.Context, telegramID int64) error {
+	q := sq.Update("public.user").
+		Where(sq.Eq{"telegram_id": telegramID}).
+		Set("has_registration_gift", false)
+
+	query, args, err := q.
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *repo) AssignSteamLinkToUser(ctx context.Context, userID int64, steamLink string) error {

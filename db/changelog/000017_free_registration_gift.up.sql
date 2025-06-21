@@ -1,0 +1,1 @@
+ALTER TABLE public.user ADD COLUMN has_registration_gift boolean not null default true;

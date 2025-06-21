@@ -21,6 +21,7 @@ func NewClient(ctx context.Context) *client {
 			"queue-new-user-steam-link",
 			"queue-neuro-task",
 			"queue-neuro-new-items",
+			"queue-telegram-registration",
 		}),
 	}
 }
@@ -91,6 +92,17 @@ func (c *client) PublishDatabusNeuroNewItems(ctx context.Context, msg NeuroNewIt
 	})
 }
 
+func (c *client) PublishDatabusTelegramRegistration(ctx context.Context, msg TelegramRegistrationDTO) error {
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return c.amqp.PublishWithContext(ctx, "", "queue-telegram-registration", true, false, sdk_amqp.Publishing{
+		ContentType: "application/json",
+		Body:        raw,
+	})
+}
+
 func (c *client) ConsumeDatabusChangeItemState(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-item-change-item-state", "", false, false, false, false, nil)
 }
@@ -113,4 +125,8 @@ func (c *client) ConsumeDatabusNeuroTask(ctx context.Context) (<-chan sdk_amqp.D
 
 func (c *client) ConsumeDatabusNeuroNewItems(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
 	return c.amqp.ConsumeWithContext(ctx, "queue-neuro-new-items", "", false, false, false, false, nil)
+}
+
+func (c *client) ConsumeDatabusTelegramRegistration(ctx context.Context) (<-chan sdk_amqp.Delivery, error) {
+	return c.amqp.ConsumeWithContext(ctx, "queue-telegram-registration", "", false, false, false, false, nil)
 }

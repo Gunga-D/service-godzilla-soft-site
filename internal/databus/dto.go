@@ -29,3 +29,7 @@ type NeuroTaskDTO struct {
 type NeuroNewItemsDTO struct {
 	Query string `json:"query"`
 }
+
+type TelegramRegistrationDTO struct {
+	TelegramID int64 `json:"telegram_id"`
+}

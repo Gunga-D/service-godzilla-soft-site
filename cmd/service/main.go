@@ -16,6 +16,10 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
+
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/yandex_market"
@@ -181,7 +185,7 @@ func main() {
 		r1.Post("/user_register", user_register.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_login", user_login.NewHandler(authJWT, userRepo).Handle())
 		r1.Post("/user_change_password", user_change_password.NewHandler(userRepo, changePasswordTemplate, databusClient).Handle())
-		r1.Post("/telegram_sign_in", telegram_sign_in.NewHandler(authJWT, userRepo, os.Getenv("TELEGRAM_LOGIN_WIDGET_BOT_TOKEN")).Handle())
+		r1.Post("/telegram_sign_in", telegram_sign_in.NewHandler(authJWT, userRepo, os.Getenv("TELEGRAM_LOGIN_WIDGET_BOT_TOKEN"), databusClient).Handle())
 
 		r1.Get("/collections", fetch_collections.NewHandler(collectionRepo).Handle())
 		r1.Get("/collection_items", fetch_collection_items.NewHandler(itemCache, collectionRepo).Handle())

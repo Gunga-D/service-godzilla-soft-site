@@ -9,21 +9,24 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/databus"
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 )
 
 type handler struct {
-	jwtService   jwtService
-	userRepo     user.Repository
-	authBotToken string
+	jwtService                  jwtService
+	userRepo                    user.Repository
+	authBotToken                string
+	telegramRegistrationDatabus telegramRegistrationDatabus
 }
 
-func NewHandler(jwtService jwtService, userRepo user.Repository, authBotToken string) *handler {
+func NewHandler(jwtService jwtService, userRepo user.Repository, authBotToken string, telegramRegistrationDatabus telegramRegistrationDatabus) *handler {
 	return &handler{
-		jwtService:   jwtService,
-		userRepo:     userRepo,
-		authBotToken: authBotToken,
+		jwtService:                  jwtService,
+		userRepo:                    userRepo,
+		authBotToken:                authBotToken,
+		telegramRegistrationDatabus: telegramRegistrationDatabus,
 	}
 }
 
@@ -50,15 +53,25 @@ func (h *handler) Handle() http.HandlerFunc {
 		var userEmail *string
 		if usr == nil {
 			createdUserID, err := h.userRepo.CreateUser(r.Context(), user.User{
-				PhotoURL:   req.PhotoURL,
-				Username:   req.Username,
-				FirstName:  req.FirstName,
-				TelegramID: &req.ID,
+				PhotoURL:            req.PhotoURL,
+				Username:            req.Username,
+				FirstName:           req.FirstName,
+				TelegramID:          &req.ID,
+				HasRegistrationGift: true,
 			})
 			if err != nil {
 				api.Return500("Произошла непредвиденная ошибка, попробуйте чуть позже", w)
 				return
 			}
+
+			err = h.telegramRegistrationDatabus.PublishDatabusTelegramRegistration(r.Context(), databus.TelegramRegistrationDTO{
+				TelegramID: req.ID,
+			})
+			if err != nil {
+				api.Return500("Произошла непредвиденная ошибка, попробуйте чуть позже", w)
+				return
+			}
+
 			userID = createdUserID
 		} else {
 			userID = usr.ID
