@@ -116,7 +116,10 @@ func (r *repo) FetchPaidOrders(ctx context.Context) ([]order.PaidOrder, error) {
 func (r *repo) FetchUserOrdersByEmail(ctx context.Context, email string) ([]order.UserOrder, error) {
 	query, args, err := sq.Select("id, code_value, item_slip", "item_name", "amount", "status").From(`public.order`).
 		Where(sq.And{
-			sq.NotEq{"status": order.PendingStatus},
+			sq.Or{
+				sq.Eq{"status": order.FinishedStatus},
+				sq.Eq{"status": order.PaidStatus},
+			},
 			sq.Eq{"email": email},
 		}).
 		OrderBy("created_at desc").
