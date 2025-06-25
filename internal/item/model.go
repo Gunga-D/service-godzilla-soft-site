@@ -38,6 +38,7 @@ type Item struct {
 	VerticalImage   *string   `db:"vertical_image"`
 	SteamRawData    *string   `db:"steam_raw_data"`
 	ExistsInRandom  bool      `db:"exists_in_random"`
+	InSub           bool      `db:"in_sub"`
 	CreatedAt       time.Time `db:"created_at"`
 	UpdatedAt       time.Time `db:"updated_at"`
 }

@@ -35,13 +35,14 @@ func NewClient(apiURL string, password string, terminalKey string) *client {
 }
 
 func (c *client) CreateInvoice(ctx context.Context, orderID string, amount int64, description string) (*CreateInvoiceResponse, error) {
-	token := generateToken(map[string]string{
+	body := map[string]string{
 		"TerminalKey": c.terminalKey,
 		"OrderId":     orderID,
 		"Description": description,
 		"Amount":      fmt.Sprint(amount),
 		"Password":    c.password,
-	})
+	}
+	token := generateToken(body)
 
 	req := CreateInvoiceRequest{
 		TerminalKey: c.terminalKey,
@@ -63,8 +64,82 @@ func (c *client) CreateInvoice(ctx context.Context, orderID string, amount int64
 	if resp.StatusCode() != http.StatusOK {
 		return nil, fmt.Errorf("cannot create invoice: \n%s", string(resp.Body()))
 	}
-	log.Printf("Tinkoff body:\n%s\n", string(resp.Body()))
+	log.Printf("Tinkoff Invoice body:\n%s\n", string(resp.Body()))
 	return resp.Result().(*CreateInvoiceResponse), nil
+}
+
+func (c *client) CreateRecurrent(ctx context.Context, orderID string, amount int64, description string, customerKey string, notificationURL string) (*CreateRecurrentResponse, error) {
+	body := map[string]string{
+		"TerminalKey":     c.terminalKey,
+		"OrderId":         orderID,
+		"Description":     description,
+		"Amount":          fmt.Sprint(amount),
+		"Password":        c.password,
+		"Recurrent":       "Y",
+		"CustomerKey":     customerKey,
+		"PayType":         "O",
+		"NotificationURL": notificationURL,
+	}
+	token := generateToken(body)
+
+	req := CreateRecurrentRequest{
+		TerminalKey:     c.terminalKey,
+		Amount:          amount,
+		OrderID:         orderID,
+		Description:     description,
+		Recurrent:       "Y",
+		CustomerKey:     customerKey,
+		PayType:         "O",
+		NotificationURL: notificationURL,
+		Token:           token,
+	}
+
+	resp, err := c.rc.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetBody(req).
+		SetResult(CreateRecurrentResponse{}).
+		Post("/v2/Init")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("cannot create recurrent: \n%s", string(resp.Body()))
+	}
+	log.Printf("Tinkoff Recurrent body:\n%s\n", string(resp.Body()))
+	return resp.Result().(*CreateRecurrentResponse), nil
+}
+
+func (c *client) Charge(ctx context.Context, rebillID string, paymentID string) (*ChargeResponse, error) {
+	body := map[string]string{
+		"TerminalKey": c.terminalKey,
+		"PaymentId":   paymentID,
+		"RebillId":    rebillID,
+		"Password":    c.password,
+	}
+	token := generateToken(body)
+
+	req := ChargeRequest{
+		TerminalKey: c.terminalKey,
+		PaymentId:   paymentID,
+		RebillId:    rebillID,
+		Token:       token,
+	}
+
+	resp, err := c.rc.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetBody(req).
+		SetResult(ChargeResponse{}).
+		Post("/v2/Charge")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, fmt.Errorf("cannot charge: \n%s", string(resp.Body()))
+	}
+	log.Printf("Tinkoff Charge body:\n%s\n", string(resp.Body()))
+	return resp.Result().(*ChargeResponse), nil
 }
 
 func generateToken(v map[string]string) string {

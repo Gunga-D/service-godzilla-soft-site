@@ -73,10 +73,14 @@ func (h *handler) Handle() http.HandlerFunc {
 		if v, err := strconv.ParseInt(r.URL.Query().Get("category_id"), 10, 64); err == nil {
 			criteries = append(criteries, sq.Eq{"category_id": v})
 		}
-		if r.URL.Query().Get("steam_gift") == "true" {
-			criteries = append(criteries, sq.Eq{"is_steam_gift": true})
+		if r.URL.Query().Get("in_sub") == "1" {
+			criteries = append(criteries, sq.Eq{"in_sub": true})
 		} else {
-			criteries = append(criteries, sq.Eq{"is_steam_gift": false})
+			if r.URL.Query().Get("steam_gift") == "true" {
+				criteries = append(criteries, sq.Eq{"is_steam_gift": true})
+			} else {
+				criteries = append(criteries, sq.Eq{"is_steam_gift": false})
+			}
 		}
 		if v := r.URL.Query().Get("region"); v != "" {
 			regionCriteria := sq.Or{}
@@ -100,7 +104,6 @@ func (h *handler) Handle() http.HandlerFunc {
 		if r.URL.Query().Get("unavailable") == "1" {
 			criteries = append(criteries, sq.Eq{"unavailable": true})
 		}
-
 		items, err := h.itemRepo.FetchItemsByFilter(r.Context(), criteries, limit, offset, orderBy)
 		if err != nil {
 			api.Return500("Ошибка получения каталога", w)
@@ -172,6 +175,7 @@ func (h *handler) Handle() http.HandlerFunc {
 				HorizontalImageURL: horizontalImageURL,
 				ReleaseDate:        releaseDate,
 				TotalCount:         &itemsCount,
+				InSub:              item.InSub,
 			})
 		}
 		api.ReturnOK(res, w)

@@ -13,6 +13,9 @@ import (
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/fetch_topics"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/get_topic"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/payment_subscription_notification"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/subscribe"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/subscription_product"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_keys"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
@@ -69,10 +72,12 @@ import (
 	neuro_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/neuro/redis"
 	order_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/order/postgres"
 	review_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/review/postgres"
+	sub_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/subscription/postgres"
 	topics_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/postgres"
 	topics_redis "github.com/Gunga-D/service-godzilla-soft-site/internal/topics/redis"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
 	user_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/user/postgres"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/subscription"
 	voucher_activation "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/activation"
 	voucher_postgres "github.com/Gunga-D/service-godzilla-soft-site/internal/voucher/postgres"
 	"github.com/Gunga-D/service-godzilla-soft-site/pkg/postgres"
@@ -116,6 +121,10 @@ func main() {
 	if err != nil {
 		log.Fatalln("failed loading html templates")
 	}
+	registrationTemplate, err := template.ParseFiles("assets/registration-template.html")
+	if err != nil {
+		log.Fatalln("failed loading html templates")
+	}
 
 	itemRepo := item_postgres.NewRepo(postgres)
 	itemRecommendation := recomendation.NewService(steamClient)
@@ -142,6 +151,9 @@ func main() {
 	topicsRedisRepo := topics_redis.NewRedisRepo(redis)
 	topicsPostgres := topics_postgres.NewRepo(postgres)
 	topicsRepo := cached.NewRepo(topicsPostgres, topicsRedisRepo)
+
+	subRepo := sub_postgres.NewRepo(postgres)
+	userChecker := subscription.NewService(subRepo)
 
 	mux := chi.NewMux()
 	mux.Use(middleware.Timeout(5 * time.Second))
@@ -211,8 +223,11 @@ func main() {
 
 			r2.Post("/add_review", add_review.NewHandler(reviewRepo).Handle())
 
-			r2.Get("/user_profile", user_profile.NewHandler(redis, userRepo).Handle())
+			r2.Get("/user_profile", user_profile.NewHandler(userChecker, redis, userRepo).Handle())
 			r2.Get("/user_keys", user_keys.NewHandler(orderRepo).Handle())
+
+			r2.Post("/subscribe", subscribe.NewHandler(authJWT, registrationTemplate, userRepo, databusClient, subRepo, userChecker, tinkoffClient).Handle())
+			r2.Post("/subscription_product", subscription_product.NewHandler(userChecker, subRepo).Handle())
 		})
 
 		r1.Route("/steam_gift", func(r2 chi.Router) {
@@ -220,6 +235,7 @@ func main() {
 		})
 
 		r1.Post("/payment_notification", payment_notification.NewHandler(os.Getenv("TINKOFF_TERMINAL_KEY"), orderRepo).Handle())
+		r1.Post("/payment_subscription_notification", payment_subscription_notification.NewHandler(os.Getenv("TINKOFF_TERMINAL_KEY"), subRepo).Handle())
 
 		r1.Post("/think", think.NewHandler(databusClient).Handle())
 		r1.Post("/think_result", think_result.NewHandler(neuroCache).Handle())

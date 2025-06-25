@@ -15,5 +15,6 @@ type ItemDTO struct {
 	Description        *string  `json:"description"`
 	Type               string   `json:"type"`
 	ReleaseDate        *string  `json:"release_date"`
+	InSub              bool     `json:"in_sub"`
 	TotalCount         *int64   `json:"total_count,omitempty"`
 }

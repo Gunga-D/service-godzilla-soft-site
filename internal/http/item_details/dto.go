@@ -27,6 +27,7 @@ type ItemDTO struct {
 	YandexMarket        *YandexMarketDTO      `json:"yandex_market,omitempty"`
 	SimilarGames        []SimilarGameDTO      `json:"similar_games,omitempty"`
 	ExistsInRandom      bool                  `json:"exists_in_random"`
+	InSub               bool                  `json:"in_sub"`
 }
 
 type MovieDTO struct {

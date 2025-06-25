@@ -13,14 +13,16 @@ import (
 )
 
 type handler struct {
-	redis    redis.Redis
-	userRepo user.Repository
+	subDeterm subDeterm
+	redis     redis.Redis
+	userRepo  user.Repository
 }
 
-func NewHandler(redis redis.Redis, userRepo user.Repository) *handler {
+func NewHandler(subDeterm subDeterm, redis redis.Redis, userRepo user.Repository) *handler {
 	return &handler{
-		redis:    redis,
-		userRepo: userRepo,
+		subDeterm: subDeterm,
+		redis:     redis,
+		userRepo:  userRepo,
 	}
 }
 
@@ -59,13 +61,20 @@ func (h *handler) Handle() http.HandlerFunc {
 					return
 				}
 
+				hasSub, err := h.subDeterm.HasSubscription(r.Context(), *userID)
+				if err != nil {
+					api.Return500("Неизвестная ошибка", w)
+					return
+				}
+
 				api.ReturnOK(UserProfileResponsePayload{
-					UserID:    repoUser.ID,
-					Email:     repoUser.Email,
-					SteamLink: repoUser.SteamLink,
-					PhotoURL:  repoUser.PhotoURL,
-					Username:  repoUser.Username,
-					FirstName: repoUser.FirstName,
+					UserID:          repoUser.ID,
+					Email:           repoUser.Email,
+					SteamLink:       repoUser.SteamLink,
+					PhotoURL:        repoUser.PhotoURL,
+					Username:        repoUser.Username,
+					FirstName:       repoUser.FirstName,
+					HasSubscription: hasSub,
 				}, w)
 				return
 			}
@@ -79,13 +88,20 @@ func (h *handler) Handle() http.HandlerFunc {
 			return
 		}
 
+		hasSub, err := h.subDeterm.HasSubscription(r.Context(), *userID)
+		if err != nil {
+			api.Return500("Неизвестная ошибка", w)
+			return
+		}
+
 		api.ReturnOK(UserProfileResponsePayload{
-			UserID:    cacheUser.ID,
-			Email:     cacheUser.Email,
-			SteamLink: cacheUser.SteamLink,
-			PhotoURL:  cacheUser.PhotoURL,
-			Username:  cacheUser.Username,
-			FirstName: cacheUser.FirstName,
+			UserID:          cacheUser.ID,
+			Email:           cacheUser.Email,
+			SteamLink:       cacheUser.SteamLink,
+			PhotoURL:        cacheUser.PhotoURL,
+			Username:        cacheUser.Username,
+			FirstName:       cacheUser.FirstName,
+			HasSubscription: hasSub,
 		}, w)
 	}
 }
