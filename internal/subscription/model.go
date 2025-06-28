@@ -7,6 +7,7 @@ type UserSubscription struct {
 
 type PaidSubscription struct {
 	UserID      int64  `db:"user_id"`
+	CreatedAt   int64  `db:"created_at"`
 	ExpiredAt   int64  `db:"expired_at"`
 	RebillID    string `db:"rebill_id"`
 	NeedProlong bool   `db:"need_prolong"`

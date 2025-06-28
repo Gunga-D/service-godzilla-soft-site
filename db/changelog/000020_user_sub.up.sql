@@ -5,7 +5,7 @@ create table if not exists public.subscription_bills (
     rebill_id text,
     status text not null,
     need_prolong boolean not null default true,
-    created_at timestamp without time zone,
+    created_at bigint not null,
     updated_at timestamp without time zone,
     expired_at bigint not null
 );

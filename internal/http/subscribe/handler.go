@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"text/template"
@@ -15,10 +16,12 @@ import (
 	api "github.com/Gunga-D/service-godzilla-soft-site/internal/http"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/user/auth"
+	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
 )
 
 const (
-	_subscriptionNotifyURL = "https://webhook.site/b04ace61-fb35-45b0-9fbc-cac1eb58bf15"
+	_subscriptionNotifyURL = "https://api.godzillasoft.ru/v1/payment_subscription_notification"
+	_isSoon                = true
 )
 
 type htmlRegistrationTemplateData struct {
@@ -97,6 +100,21 @@ func (h *handler) Handle() http.HandlerFunc {
 			accessToken = &newUserAccessToken
 		}
 
+		if _isSoon {
+			if body.Email != nil {
+				logger.Get().Log(fmt.Sprintf("❤️ Баер захотел приобрести подписку, но мы его просто зарегали %s", *body.Email))
+			} else {
+				if userID != nil {
+					logger.Get().Log(fmt.Sprintf("❤️ Зареганный пользователь %d захотел приобрести подписку", *userID))
+				}
+			}
+			api.ReturnOK(SubscribeResponse{
+				UserAccessToken: accessToken,
+				RedirectLink:    "https://godzillasoft.ru/subscription_soon",
+			}, w)
+			return
+		}
+
 		cost, ok := prices[body.Period]
 		if !ok {
 			api.Return400("Период принимает значения month и year", w)
@@ -115,12 +133,14 @@ func (h *handler) Handle() http.HandlerFunc {
 
 		id, err := h.subRepo.CreateSubscriptionBill(r.Context(), *userID, cost, duration)
 		if err != nil {
+			log.Printf("[error] cannot create subscription bill %v\n", err)
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
 
 		resp, err := h.tinkoffClient.CreateRecurrent(r.Context(), id, cost, fmt.Sprintf("Подписка GODZILLA SOFT на %s", durationName), fmt.Sprint(*userID), _subscriptionNotifyURL)
 		if err != nil {
+			log.Printf("[error] cannot create recurrent payment %v\n", err)
 			api.Return500("Неизвестная ошибка", w)
 			return
 		}
@@ -128,7 +148,7 @@ func (h *handler) Handle() http.HandlerFunc {
 		api.ReturnOK(SubscribeResponse{
 			UserAccessToken: accessToken,
 			SubscriptionID:  id,
-			PaymentLink:     resp.PaymentURL,
+			RedirectLink:    resp.PaymentURL,
 		}, w)
 	}
 }
@@ -140,7 +160,7 @@ func (h *handler) syncRegisterUser(ctx context.Context, email string) (string, i
 		Password: pointer.ToString(auth.GeneratePassword(ctx, newPwd)),
 	})
 	if err != nil {
-		return "", 0, errors.New("Невозможно создать пользователя, попробуйте чуть позже")
+		return "", 0, errors.New("Необходимо авторизоваться перед покупкой подписки")
 	}
 
 	var body bytes.Buffer
@@ -149,6 +169,7 @@ func (h *handler) syncRegisterUser(ctx context.Context, email string) (string, i
 		Password: newPwd,
 	})
 	if err != nil {
+		log.Printf("[error] cannot execute registration template: %v\n", err)
 		return "", 0, errors.New("Неизвестная ошибка")
 	}
 
@@ -158,11 +179,13 @@ func (h *handler) syncRegisterUser(ctx context.Context, email string) (string, i
 		Body:    body.String(),
 	})
 	if err != nil {
+		log.Printf("[error] cannot publish to send to email databus: %v\n", err)
 		return "", 0, errors.New("Неизвестная ошибка")
 	}
 
 	accessToken, err := h.jwtService.GenerateToken(userID, &email)
 	if err != nil {
+		log.Printf("[error] cannot generate access token: %v\n", err)
 		return "", 0, errors.New("Неизвестная ошибка")
 	}
 	return accessToken, userID, nil

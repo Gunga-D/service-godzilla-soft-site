@@ -8,5 +8,5 @@ type SubscribeRequest struct {
 type SubscribeResponse struct {
 	UserAccessToken *string `json:"user_access_token"`
 	SubscriptionID  string  `json:"subscription_id"`
-	PaymentLink     string  `json:"payment_link"`
+	RedirectLink    string  `json:"redirect_link"`
 }

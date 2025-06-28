@@ -59,7 +59,7 @@ func (s *service) process(ctx context.Context) error {
 			continue
 		}
 
-		id, err := s.subRepo.CreateSubscriptionBill(ctx, sub.UserID, _subscriptionCost, _subscriptionDuration)
+		id, err := s.subRepo.CreateSubscriptionBill(ctx, sub.UserID, _subscriptionCost, time.Duration(sub.ExpiredAt-sub.CreatedAt)*time.Second)
 		if err != nil {
 			log.Printf("[error] cannot create subscription bill: %v\n", err)
 			continue
