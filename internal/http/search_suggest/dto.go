@@ -25,5 +25,6 @@ type SearchSuggestDTO struct {
 	ItemHorizontalImage *string  `json:"item_horizontal_image,omitempty"`
 	ItemGenres          []string `json:"item_genres,omitempty"`
 	ItemReleaseDate     *string  `json:"item_release_date,omitempty"`
+	ItemInSub           *bool    `json:"item_in_sub"`
 	Probability         float64  `json:"probability"`
 }

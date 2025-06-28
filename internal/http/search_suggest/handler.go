@@ -70,6 +70,7 @@ func (h *handler) Handle() http.HandlerFunc {
 					ItemIsForSale:       &s.Item.IsForSale,
 					ItemOldPrice:        itemOldPrice,
 					ItemThumbnailURL:    &s.Item.ThumbnailURL,
+					ItemInSub:           &s.Item.InSub,
 					Probability:         s.Probability,
 					ItemType:            pointer.ToString(itemType),
 					ItemHorizontalImage: itemHorizontalImage,
