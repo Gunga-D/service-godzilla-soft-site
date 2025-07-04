@@ -68,6 +68,7 @@ services:
     networks:
       - service-godzilla-soft-site
     volumes:
+      - ./db/godzilla_soft_site_local-2025_05_31_12_05_42-dump.sql:/docker-entrypoint-initdb.d/dump.sql
       - ./db/data:/var/lib/postgresql/data
     env_file: ./.env.prod
     ports:

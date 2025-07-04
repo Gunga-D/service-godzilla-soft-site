@@ -17,19 +17,19 @@ const (
 	_defaultCount = 0
 )
 
-type handler struct {
+type Handler struct {
 	itemRepo  item_info.ReadRepository
 	itemCache itemCache
 }
 
-func NewHandler(itemRepo item_info.ReadRepository, itemCache itemCache) *handler {
-	return &handler{
+func NewHandler(itemRepo item_info.ReadRepository, itemCache itemCache) *Handler {
+	return &Handler{
 		itemRepo:  itemRepo,
 		itemCache: itemCache,
 	}
 }
 
-func (h *handler) Handle() http.HandlerFunc {
+func (h *Handler) Handle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		limit, err := strconv.ParseUint(r.URL.Query().Get("limit"), 10, 64)
 		if err != nil {

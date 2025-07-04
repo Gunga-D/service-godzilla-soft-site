@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/roulette_items"
+	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/roulette_session"
+	roulettePostgres "github.com/Gunga-D/service-godzilla-soft-site/internal/roulette/postgres"
 	"log"
 	"net/http"
 	"os"
@@ -18,8 +21,8 @@ import (
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/subscription_product"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/http/user_keys"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/topics/cached"
-	"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
-	tele "gopkg.in/telebot.v4"
+	//"github.com/Gunga-D/service-godzilla-soft-site/pkg/logger"
+	//tele "gopkg.in/telebot.v4"
 
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/steam"
 	"github.com/Gunga-D/service-godzilla-soft-site/internal/clients/tinkoff"
@@ -98,15 +101,17 @@ func main() {
 
 	databusClient := databus.NewClient(ctx)
 
-	telebot, err := tele.NewBot(tele.Settings{
-		Token:  os.Getenv("TELEGRAM_TOKEN"),
-		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
-	})
-	if err != nil {
-		log.Printf("[error] cant init telegram bot: %v", err)
-		return
-	}
-	logger.Get().SetBot(telebot)
+	/*
+		telebot, err := tele.NewBot(tele.Settings{
+			Token:  os.Getenv("TELEGRAM_TOKEN"),
+			Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+		})
+		if err != nil {
+			log.Printf("[error] cant init telegram bot: %v", err)
+			return
+		}
+		logger.Get().SetBot(telebot)
+	*/
 
 	steamClient := steam.NewClient(os.Getenv("STEAM_KEY"))
 	tinkoffClient := tinkoff.NewClient(os.Getenv("TINKOFF_API_URL"), os.Getenv("TINKOFF_PASSWORD"), os.Getenv("TINKOFF_TERMINAL_KEY"))
@@ -151,6 +156,8 @@ func main() {
 	topicsRedisRepo := topics_redis.NewRedisRepo(redis)
 	topicsPostgres := topics_postgres.NewRepo(postgres)
 	topicsRepo := cached.NewRepo(topicsPostgres, topicsRedisRepo)
+
+	rouletteRepo := roulettePostgres.NewRepo(postgres)
 
 	subRepo := sub_postgres.NewRepo(postgres)
 	userChecker := subscription.NewService(subRepo)
@@ -243,6 +250,19 @@ func main() {
 		// topics
 		r1.Get("/topics", fetch_topics.NewHandler(topicsRepo).Handle())
 		r1.Get("/topic", get_topic.NewHandler(topicsRepo).Handle())
+
+		// /roulette
+		r1.Post("/roulette/items", roulette_items.NewHandler(rouletteRepo).HandleAdd())
+		r1.Get("/roulette/items", roulette_items.NewHandler(rouletteRepo).HandleFetchItems())
+
+		// /roulette/session
+		//r1.Post("/roulette/session", roulette_session.NewHandler(rouletteRepo).HandleCreate())
+		r1.Route("/roulette/{session_id}", func(r2 chi.Router) {
+			r2.Use(mdw.NewVerifyUUID("session_id").VerifyUUID)
+			r2.Get("/", roulette_session.NewHandler(rouletteRepo).HandleGetSession())
+			r2.Get("/items", roulette_session.NewHandler(rouletteRepo).HandleFetchItems())
+			r2.Post("/tops", roulette_session.NewHandler(rouletteRepo).HandleAddTops())
+		})
 	})
 
 	log.Println("[info] server start up")
