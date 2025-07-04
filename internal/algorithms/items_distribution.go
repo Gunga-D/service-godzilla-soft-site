@@ -94,6 +94,7 @@ func (d ItemsDistribution) Split() {
 		d.intervals[i].End = start + calculateWeigth(d.avgCost, d.intervals[i].Item.TotalCost)
 		start = d.intervals[i].End
 	}
+	d.normalize()
 }
 
 func (d ItemsDistribution) EstimateProbabilities() []float64 {
@@ -114,4 +115,16 @@ func (d ItemsDistribution) EstimateProbabilities() []float64 {
 		res[indx] = 100 * i.Length() / totalLength
 	}
 	return res
+}
+
+func (d ItemsDistribution) Intervals() []ItemInterval {
+	return d.intervals
+}
+
+func (d ItemsDistribution) normalize() {
+	totalLength := d.TotalIntervalLength()
+	for i := range d.intervals {
+		d.intervals[i].Begin /= totalLength
+		d.intervals[i].End /= totalLength
+	}
 }

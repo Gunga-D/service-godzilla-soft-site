@@ -28,5 +28,5 @@ func TestRollItems(t *testing.T) {
 	for i := 0; i < len(probs); i++ {
 		totalChance += probs[i]
 	}
-	fmt.Println(totalChance)
+	fmt.Println(probs)
 }
